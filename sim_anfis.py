@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 opti = optimizers.SGD(learning_rate=0.2, momentum=0.01, nesterov=False)
 
 param = myanfis.fis_parameters(
-            n_input = 3,                # no. of Regressors
-            n_memb = 3,                 # no. of fuzzy memberships
+            n_input = 4,                # no. of Regressors
+            n_memb = 4,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',     # 'gaussian' / 'bell'
             optimizer = 'adam',         # sgd / adam / ...
