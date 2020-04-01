@@ -21,7 +21,7 @@ class fis_parameters():
         self.n_epochs = n_epochs
         self.memb_func = memb_func  # 'gaussian' / 'bell'
         self.optimizer = optimizer   # sgd / adam / 
-        self.loss = loss     # mse / mae
+        self.loss = loss     ## mse / mae
         
 # Layer 1
 class FuzzyLayer(keras.layers.Layer):
