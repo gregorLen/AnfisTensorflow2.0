@@ -3,10 +3,10 @@ MyAnfis Implementation
 Gregor Lenhard 
 University of Basel
 """
-# import logging
-# logging.getLogger('tensorflow').disabled = True
+import logging
+logging.getLogger('tensorflow').disabled = True
 import os
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # remove WARNING Messages
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # remove WARNING Messages
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
