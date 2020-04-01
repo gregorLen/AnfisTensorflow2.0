@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 opti = optimizers.SGD(learning_rate=0.2, momentum=0.01, nesterov=False)
 
 param = myanfis.fis_parameters(
-            n_input = 4,                # no. of Regressors
+            n_input = 3,                # no. of Regressors
             n_memb = 4,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',     # 'gaussian' / 'bell'
@@ -28,7 +28,7 @@ param = myanfis.fis_parameters(
             )      
 
 ## Data Parameters
-data_set = 2                            # 1 = random / 2 = mackey / 3 = sinc/ 
+data_set = 3                            # 1 = random / 2 = mackey / 3 = sinc/ 
                                         # 4 = Three-Input Nonlin /5 = diabetes
 n_obs = param.batch_size * 100
 
