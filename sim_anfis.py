@@ -28,7 +28,7 @@ param = myanfis.fis_parameters(
             )      
 
 ## Data Parameters
-data_set = 3                            # 1 = random / 2 = mackey / 3 = sinc/ 
+data_set = 2                            # 1 = random / 2 = mackey / 3 = sinc/ 
                                         # 4 = Three-Input Nonlin /5 = diabetes
 n_obs = param.batch_size * 100
 
