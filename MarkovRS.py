@@ -10,7 +10,8 @@ class MRS:
                                                   [0.03,  0.969,  0.001], 
                                                   [0.00,  0.03,   0.97] ]),
                         
-                        mu_params =     np.array( [0.07,0.0,-0.55]) ,
+                        # mu_params =     np.array( [0.07,0.0,-0.55]) ,
+                        mu_params =     np.array( [0.08,0.0,-0.60]) ,
                         
                         sigma_params =  np.array( [.1,.25,.60]),
                         
