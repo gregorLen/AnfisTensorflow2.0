@@ -4,3 +4,4 @@ venv
 env
 .pytest_cache
 .coverage
+logs
