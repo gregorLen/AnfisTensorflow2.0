@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.datasets import load_diabetes 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.datasets import make_regression
 ##############################################################################
 
 def gen_data(data_set, n_obs, n_input, n_memb):
@@ -14,10 +14,16 @@ def gen_data(data_set, n_obs, n_input, n_memb):
     scaler = StandardScaler()    # data will be standadized
     
     if data_set == 1: 
-        X = np.random.randn(n_obs, n_input).astype('float32')
-        X = scaler.fit_transform(X)
-        y = np.random.randn(n_obs, 1).astype('float32')*10
-        X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4)    
+        # creates a regression-type problem with noise. One Regressor is non-informative.
+        X, y = make_regression(n_samples=n_obs, 
+                               n_features=n_input, 
+                               n_informative=n_input-1, 
+                               n_targets=1, 
+                               noise=20     
+                               )
+        
+        X, y = X.astype('float32'), y.astype('float32').reshape(-1,1)
+        X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4)   
         
     elif data_set == 2: 
         X, y = mackey_data(n_obs, n_input, 1)
@@ -30,7 +36,7 @@ def gen_data(data_set, n_obs, n_input, n_memb):
         X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4)
         if n_input != 2:
             n_input = 2 
-            print('Nonlin sinc equation data set requires n_input==3. Switched to 3.')
+            print('Nonlin sinc equation data set requires n_input==3. Switched to 2.')
         
     elif data_set == 4: 
         X, y = nonlin_data(n_obs)

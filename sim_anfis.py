@@ -18,35 +18,27 @@ import matplotlib.pyplot as plt
 opti = optimizers.SGD(learning_rate=0.2, momentum=0.01, nesterov=False)
 
 param = myanfis.fis_parameters(
-            n_input = 3,                # no. of Regressors
-            n_memb = 3,                 # no. of fuzzy memberships
+            n_input = 4,                # no. of Regressors
+            n_memb = 4,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
-            memb_func = 'gaussian',     # 'gaussian' / 'bell'
-            optimizer = 'adam',         # sgd / adam / ...
-            loss = 'huber_loss',        # mse / mae / huber_loss / hinge / ...
+            memb_func = 'bell',     # 'gaussian' / 'bell'
+            optimizer = 'sgd',         # sgd / adam / ...
+            loss = 'mae',        # mse / mae / huber_loss / hinge / ...
             n_epochs = 25               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
-data_set = 2                            # 1 = random / 2 = mackey / 3 = sinc/ 
+data_set = 1                            # 1 = regression / 2 = mackey / 3 = sinc/ 
                                         # 4 = Three-Input Nonlin /5 = diabetes
 n_obs = param.batch_size * 100
 
 ## General Parameters
-plot_learningcurves = False             # True / False
+plot_learningcurves = True             # True / False
 plot_mfs = True                         # True / False
 show_summary = True                     # True / False
 
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
-    # set up tensorboard call back
-log_name = f'-epoch{param.n_epochs}_N{param.n_input}_M{param.n_memb}_{param.optimizer}_{param.loss}'
-path = os.path.join("logs", "sim_anfis",
-                    datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
-                    + log_name
-                    )
-tensorboard_callback = TensorBoard(log_dir=path, histogram_freq=1)
-# to call tensorboard type in prompt >> tensorboard --logdir=logs/sim_anfis
 ##############################################################################    
 # Generate Data
 X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set, n_obs, param.n_input, param.n_memb)
@@ -55,6 +47,15 @@ X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set, n_obs, param.n_i
 tf.debugging.set_log_device_placement(show_core_usage) # find out which devices your operations and tensors are assigned to
 
 with tf.device(core):  # CPU / GPU
+    
+    # set tensorboard call back
+    log_name = f'-data_{data_set}_N{param.n_input}_M{param.n_memb}_batch{param.batch_size}_{param.memb_func}_{param.optimizer}_{param.loss}'
+    path = os.path.join("logs", "sim_anfis",
+                        datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
+                        + log_name
+                        )
+    tensorboard_callback = TensorBoard(log_dir=path, histogram_freq=1)
+    
     # create model
     fis = myanfis.ANFIS(n_input = param.n_input, 
                         n_memb = param.n_memb, 
@@ -91,7 +92,7 @@ if plot_learningcurves:
     plt.show()
     
 y_pred = fis.model.predict(X)
-if data_set == 2 or 3:
+if data_set == 1 or 2 or 3:
     plt.subplot(2,1,1)
     plt.plot(y)
     plt.plot(y_pred)
