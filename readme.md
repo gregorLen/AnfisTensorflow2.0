@@ -1,13 +1,19 @@
-ANLEITUNG FÜR TENSORBOARD
+#### Creating an ANFIS-based early waring system
 
+## Using Tensoboard
 
+# Step 1: Set working directory : 
+>> cd /d S:\...\MyAnfis
 
-prompt: 
->> cd /d S:\Meine Daten\Switch Drive\PhD\Project 1\Codes
->> conda activate tf2
+# Step 2: Activate virtual environment
+>> conda activate tensorflow
 
- FÜR simanfis sandbox
+# Step 3: Start Tensorflow
+for simanfis sandbox
 >> tensorboard --logdir=logs/sim_anfis
 
- FÜR RegimeSwitching experimente
+for RegimeSwitching experiments
 >> tensorboard --logdir=logs/sim_MRS
+
+# Step 4: open Browser
+localhost:6006
