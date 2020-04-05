@@ -17,7 +17,7 @@ HP_n_input = hp.HParam('n_ipnut', hp.Discrete([2, 3, 5]))                   # no
 HP_n_memb = hp.HParam('n_memb', hp.Discrete([2, 3, 5]))                     # no. of fuzzy memberships
 HP_memb_func = hp.HParam('memb_func', hp.Discrete(['gaussian', 'bell']))     # 'gaussian' / 'bell'
 HP_optimizer = hp.HParam('optimizer', hp.Discrete(['adam', 'sgd']))         # sgd / adam / ...
-HP_loss = hp.HParam('loss', hp.Discrete(['mse', 'mae', 'huber_loss']))      # mse / mae / huber_loss / hinge / ...
+HP_loss = hp.HParam('loss', hp.Discrete(['mse', 'mae', 'huber_loss']))      # mse / mae / huber_loss / hinge / ... 
 
 METRIC = 'mse'
 
@@ -43,7 +43,7 @@ with tf.summary.create_file_writer('logs/exp_anfis').as_default():
                       )
 
 
-def train_test_model(hparams):
+def train_test_model(logdir, hparams):
     # Generate Data
     X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set, n_obs, hparams[HP_n_input], hparams[HP_n_memb])
     
@@ -58,99 +58,64 @@ def train_test_model(hparams):
     # compile model
     fis.model.compile(optimizer=hparams[HP_optimizer], 
                       loss=hparams[HP_loss], 
-                      metrics=['mse'],
+                      metrics=['mse'],             # TODO: add ['mae', 'mse']
                       )
     # fit model
     fis.fit(X_train, y_train, 
             epochs=n_epochs, 
-            batch_size=batch_size#,
-            #validation_data = (X_test, y_test),
-            # callbacks = [TensorBoard(logdir),  # log metrics
-            #              hp.KerasCallback(logdir, hparams),  # log hparams
-            #              ]
+            batch_size=batch_size,
+            validation_data = (X_test, y_test),
+            callbacks = [TensorBoard(log_dir=logdir, histogram_freq=1, profile_batch = 100000000),  # log metrics
+                          hp.KerasCallback(logdir, hparams),  # log hparams
+                          ]
             )  
+    
     _, evaluation = fis.model.evaluate(X_test, y_test)
 
     return evaluation
 
 
-def run(run_dir, hparams):
-    with tf.summary.create_file_writer(run_dir).as_default():
+def run(logdir, hparams):
+    with tf.summary.create_file_writer(logdir).as_default():
         hp.hparams(hparams)  # record the values used in this trial
-        evaluation = train_test_model(hparams)
+        evaluation = train_test_model(logdir, hparams)
         tf.summary.scalar(METRIC, evaluation, step=1)
 
 
 
-
+start_time = time.time()
 session_num = 0
 
-for n_input in HP_n_input.domain.values:
-    for n_memb in HP_n_memb.domain.values:
-        for memb_func in HP_memb_func.domain.values:
-            for optimizer in HP_optimizer.domain.values:
-                for loss in HP_loss.domain.values:
+with tf.device(core):  # CPU / GPU
+    for n_input in HP_n_input.domain.values:
+        for n_memb in HP_n_memb.domain.values:
+            for memb_func in HP_memb_func.domain.values:
+                for optimizer in HP_optimizer.domain.values:
+                    for loss in HP_loss.domain.values:
+    
+                      # generate hyperparameters  
+                      hparams = {HP_n_input: n_input,
+                                 HP_n_memb: n_memb,
+                                 HP_memb_func: memb_func,
+                                 HP_optimizer: optimizer,
+                                 HP_loss: loss
+                                 }
+                      
+                      # generate log path
+                      session_name = f'-N{n_input}_M{n_memb}_{memb_func}_{optimizer}_{loss}'
+                      logdir = os.path.join("logs", "exp_anfis",
+                                            datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
+                                            + session_name
+                                            )
+                      
+                      print(f'--- Starting trial: {session_num}')
+                      print({h.name: hparams[h] for h in hparams})
+                      run(logdir, hparams)
+                      session_num += 1
 
-                  hparams = {HP_n_input: n_input,
-                             HP_n_memb: n_memb,
-                             HP_memb_func: memb_func,
-                             HP_optimizer: optimizer,
-                             HP_loss: loss
-                             }
-                  
-                  run_name = f'run-{session_num}'  
-                  print(f'--- Starting trial: {run_name}')
-                  print({h.name: hparams[h] for h in hparams})
-                  run('logs/exp_anfis/' + run_name, hparams)
-                  session_num += 1
+end_time = time.time()
+time = np.round(end_time - start_time,2)
+print(f'Time for experiment: {np.round(end_time - start_time,2)} seconds')
+print(f'number of experimental settings was {session_num} ')
 
 
-
-# n_exp = 0
-# start_time = time.time()
-
-# with tf.device(core):  # CPU / GPU
-#     for memb_func in param.memb_func:
-#         for optimizer in param.optimizer:
-#             for loss in param.loss:    
-#                 for n_input in param.n_input:
-#                     for n_memb in param.n_memb:
-#                         # Generate Data
-#                         X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set, n_obs, n_input, n_memb)
-                        
-#                         # set up tensorboard call back
-#                         log_name = f'-N{n_input}_M{n_memb}_{memb_func}_{optimizer}_{loss}'
-#                         path = os.path.join("logs", "exp_regression",
-#                                             datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
-#                                             + log_name
-#                                             )
-#                         tensorboard_callback = TensorBoard(log_dir=path, histogram_freq=1)
-
-#                         # create model
-#                         fis = myanfis.ANFIS(n_input = n_input, 
-#                                             n_memb = n_memb, 
-#                                             batch_size = param.batch_size, 
-#                                             memb_func = memb_func,
-#                                             name = 'myanfis'
-#                                             )
-                        
-#                         # compile model
-#                         fis.model.compile(optimizer=optimizer, 
-#                                           loss=loss 
-#                                           ,metrics=['mae', 'mse']
-#                                           )
-                        
-#                         # fit model
-#                         history = fis.fit(X_train, y_train, 
-#                                           epochs=param.n_epochs, 
-#                                           batch_size=param.batch_size,
-#                                           validation_data = (X_test, y_test),
-#                                           callbacks = [tensorboard_callback]
-#                                           )  
-                        
-#                         n_exp += 1
-
-# end_time = time.time()
-# time = np.round(end_time - start_time,2)
-# print(f'Time for experiment: {np.round(end_time - start_time,2)} seconds')
-# print(f'number of experimental settings was {n_exp} ')
