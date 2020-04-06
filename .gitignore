@@ -6,4 +6,5 @@ env
 .coverage
 logs/*
 !logs/exp_anfis/*
+!logs/exp_state_detection/*
 
