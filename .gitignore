@@ -4,6 +4,6 @@ venv
 env
 .pytest_cache
 .coverage
-logs
+logs/*
 !logs/exp_anfis/*
-.spyproject
+
