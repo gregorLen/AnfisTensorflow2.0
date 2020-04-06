@@ -12,7 +12,7 @@ from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt
 
-# parameter class fis parameters
+## parameter class fis parameters
 class fis_parameters():
     def __init__(self,n_input=3, n_memb=3, batch_size=16, n_epochs=25, memb_func='gaussian',optimizer='sgd', loss='mse'):
         self.n_input = n_input  # no. of Regressors
