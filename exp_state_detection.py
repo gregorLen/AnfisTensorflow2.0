@@ -10,6 +10,9 @@ import datetime
 import os
 from tensorflow.keras.callbacks import TensorBoard
 from tensorboard.plugins.hparams import api as hp
+from markovstate_generator import MRS
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 ##############################################################################
 ## Initializing HyperParameters 
 n_input = [2,3,5]
@@ -28,6 +31,18 @@ n_epochs = 30
 n_obs = 2000                            # will be adjusted for batch size
 data_set = 2                            # 1 = regression / 2 = mackey / 3 = sinc/ 
                                         # 4 = Three-Input Nonlin /5 = diabetes
+# Markov Process Parameters
+P = np.array([          [0.98, 0.01,   0.01],        ## Transition Matrix
+                        [0.03,  0.969,  0.001], 
+                        [0.00,  0.03,   0.97] ]),
+
+mu_params = np.array(   [0.08,0.0,-0.60])
+ 
+sigma_params = np.array([.1,.25,.60]),
+ 
+AR_params = np.array([  [0.4, -0.2],
+                        [0.5, -0.3],
+                        [0.8, -.4]])  
 
 ## General Parameters
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
@@ -38,7 +53,7 @@ show_core_usage = False                 # True / False
 tf.debugging.set_log_device_placement(show_core_usage)
 
 # create logs for the training process that records the losses
-with tf.summary.create_file_writer('logs/exp_anfis').as_default():
+with tf.summary.create_file_writer('logs/exp_state_detection').as_default():
     hp.hparams_config(hparams=[HP_n_input, HP_n_memb, HP_memb_func, HP_optimizer, HP_loss],
                       metrics=[hp.Metric(METRIC, display_name='mse')]
                       )
@@ -80,8 +95,16 @@ def run(logdir, hparams):
         evaluation = train_test_model(logdir, hparams)
         tf.summary.scalar(METRIC, evaluation, step=1)
 
+##############################################################################
 # Generate Data (same for every session)
-X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set, n_obs - n_obs%batch_size, max(n_input))
+mrs_model = MRS()
+mrs_model.sim(n_obs)
+mrs_model.plot_sim(colored=True)
+
+X, y = sim.gen_X_from_y(mrs_model.r, max(n_input), batch_size)
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.29)   
 
 # Start experiment
 start_time = time.time()
@@ -103,7 +126,7 @@ with tf.device(core):  # CPU / GPU
                       
                       # generate log path
                       session_name = f'-N{n_input}_M{n_memb}_{memb_func}_{optimizer}_{loss}'
-                      logdir = os.path.join("logs", "exp_anfis",
+                      logdir = os.path.join("logs", "exp_state_detection",
                                             datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
                                             + session_name
                                             )

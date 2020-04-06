@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_regression
 ##############################################################################
 
-def gen_data(data_set, n_obs, n_input, n_memb):
+def gen_data(data_set, n_obs, n_input):
     
     scaler = StandardScaler()    # data will be standadized
     
@@ -17,7 +17,7 @@ def gen_data(data_set, n_obs, n_input, n_memb):
         # creates a regression-type problem with noise. One Regressor is non-informative.
         X, y = make_regression(n_samples=n_obs, 
                                n_features=n_input, 
-                               n_informative=n_input-1, 
+                               n_informative=n_input, 
                                n_targets=1, 
                                noise=20     
                                )
@@ -72,6 +72,7 @@ def mackey(n_iters):
 def mackey_data(n_obs, n_input=1, D=1, noise=False):
     x = mackey(300+n_obs+n_input*D)[300:]
     data = np.zeros((n_obs, n_input+1))
+       
     for t in range(n_input*D, n_obs + n_input*D):
         data[t - n_input*D,:] = [x[t-i*D] for i in range(n_input+1)]
         X = data[:,1:]
