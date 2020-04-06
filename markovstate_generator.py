@@ -78,6 +78,7 @@ class MRS:
         
         ax = axes[0]
         ax.plot(r, 'k', linewidth = .7)
+        ax.margins(x=0)
         if colored == True:
             ax.fill_between(np.arange(len(r)), min(r), max(r), where=mc>=0,facecolor='green', alpha = .3)
             ax.fill_between(np.arange(len(r)), min(r), max(r),  where=mc>=1, facecolor='yellow', alpha = .3)
@@ -86,6 +87,7 @@ class MRS:
         
         ax = axes[1]
         ax.plot(y, 'k', linewidth = .7)
+        ax.margins(x=0)
         if colored == True:
             ax.fill_between(np.arange(len(r)), min(y), max(y), where = mc>=0, 
                             facecolor='green', alpha = .3)

@@ -236,7 +236,7 @@ class ANFIS:
                 axes[plt_n].axvline(0,0,1, alpha=.2, c='k')
                 plt_n += 1
                 if np.mod(i+1, 4) == 0:
-                    pass#f.show()
+                    f.show()
                     
         elif self.memb_func == 'bell':    
             a, b, c = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)
@@ -260,6 +260,7 @@ class ANFIS:
         print('model fitted.')
         self.update_weights()
         print('weights updated.')
+        tf.keras.backend.clear_session()  # clear the graphs
         
         return history
     

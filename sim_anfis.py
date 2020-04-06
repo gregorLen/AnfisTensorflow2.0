@@ -1,5 +1,5 @@
 """
-BASE SIMULATION MYANFIS
+BASE SIMULATION MYANFIS (SANDBOX)
 """
 import myanfis
 import numpy as np
@@ -13,29 +13,32 @@ import os
 from tensorflow.keras.callbacks import TensorBoard
 import pandas as pd 
 import matplotlib.pyplot as plt
+import seaborn as sns
 ##############################################################################
 ## Model Parameter
 opti = optimizers.SGD(learning_rate=0.2, momentum=0.01, nesterov=False)
 
 param = myanfis.fis_parameters(
-            n_input = 4,                # no. of Regressors
-            n_memb = 4,                 # no. of fuzzy memberships
+            n_input = 5,                # no. of Regressors
+            n_memb = 5,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
-            memb_func = 'bell',     # 'gaussian' / 'bell'
-            optimizer = 'sgd',         # sgd / adam / ...
-            loss = 'mae',        # mse / mae / huber_loss / hinge / ...
+            memb_func = 'gaussian',     # 'gaussian' / 'bell'
+            optimizer = 'adam',         # sgd / adam / ...
+            loss = 'huber_loss',        # mse / mae / huber_loss / hinge / ...
             n_epochs = 25               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
-data_set = 1                            # 1 = regression / 2 = mackey / 3 = sinc/ 
+data_set = 2                           # 1 = regression / 2 = mackey / 3 = sinc/ 
                                         # 4 = Three-Input Nonlin /5 = diabetes
 n_obs = param.batch_size * 100
 
 ## General Parameters
-plot_learningcurves = True             # True / False
+plot_learningcurves = True              # True / False
 plot_mfs = True                         # True / False
+plot_heatmap =True                      # True / False
 show_summary = True                     # True / False
+
 
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
@@ -102,13 +105,18 @@ if data_set == 1 or 2 or 3:
     plt.legend(['pred_error'])
     plt.show()
     
+if plot_heatmap == True:
+    state_similarity = fis.get_state_similarity(X)
+    sns.heatmap(state_similarity.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
+            vmin = state_similarity.min(), vmax=state_similarity.max(),
+            cmap=None)  # twilight_shifted
+    states = np.argmax(state_similarity, axis=1)
+    state_distribution = pd.crosstab(states, columns='count')
+
 if plot_mfs:
     fis.plotmfs()
     
 if show_summary:
     print(fis.model.summary())
 
-#state_similarity = fis.get_state_similarity(X)
-#states = np.argmax(state_similarity, axis=1)
-#pd.crosstab(states, columns='count')
 

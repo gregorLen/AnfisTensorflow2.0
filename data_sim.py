@@ -1,6 +1,6 @@
 
 """
-Data Simulation for Anfis Training
+Data Simulation for Anfis Sandbox
 """
 import numpy as np
 from sklearn.datasets import load_diabetes 
