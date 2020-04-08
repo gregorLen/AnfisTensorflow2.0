@@ -20,13 +20,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 ##############################################################################
 # Markov Process Parameters
-P = np.array([          [0.98, 0.01,   0.01],        ## Transition Matrix
+P = np.array([          [0.989, 0.01,   0.001],        ## Transition Matrix
                         [0.03,  0.969,  0.001], 
-                        [0.00,  0.03,   0.97] ]),
+                        [0.00,  0.03,   0.97] ])
 
 mu_params = np.array(   [0.08,0.0,-0.60])
  
-sigma_params = np.array([.1,.25,.60]),
+sigma_params = np.array([.1,.25,.60])
  
 AR_params = np.array([  [0.4, -0.2],
                         [0.5, -0.3],
@@ -36,11 +36,11 @@ AR_params = np.array([  [0.4, -0.2],
 # Model Parameters
 #opti = optimizers.SGD(learning_rate=0.02, momentum=0.01, nesterov=False)
 param = myanfis.fis_parameters(
-            n_input = 3,  # no. of Regressors
-            n_memb = 2,  # no. of fuzzy memberships
+            n_input = 2,  # no. of Regressors
+            n_memb = 3,  # no. of fuzzy memberships
             batch_size = 16,
             memb_func = 'gaussian',  # 'gaussian' / 'bell'
-            optimizer = 'sgd',   # sgd / adam / 
+            optimizer = 'nadam',   # sgd / adam / 
             loss = 'mse',     # mse / mae / huber_loss / hinge
             n_epochs = 30
             )  
@@ -52,10 +52,10 @@ n_obs = 2000
 plot_learningcurves = True              # True / False
 plot_mfs = True                         # True / False
 show_summary = True                     # True / False
-core = '/device:GPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
+core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 ##############################################################################
 # Generate Data
-np.random.seed(0)
+#np.random.seed(0)
 mrs_model = MRS(P, mu_params, sigma_params, AR_params)
 mrs_model.sim(n_obs)
 mrs_model.plot_sim(colored=True)
@@ -119,9 +119,11 @@ plt.legend(['Real', 'Predicted'])
 # plt.margins(x=0)
 # plt.legend(['pred_error'])
 plt.subplot(2,1,2)
-sns.heatmap(state_similarity.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
-        vmin = state_similarity.min(), vmax=state_similarity.max(),
-        cmap=None)  # twilight_shifted
+df_states = pd.DataFrame(state_similarity)
+plt.stackplot(np.arange(df_states.shape[0]),df_states.T)
+# sns.heatmap(state_similarity.T, fmt="f", xticklabels=250,cbar_kws={"orientation": "horizontal"},
+#         vmin = state_similarity.min(), vmax=state_similarity.max(),
+#         cmap=None)  # twilight_shifted
 plt.show()
 
 # plot learning curves
@@ -137,3 +139,8 @@ if plot_mfs:
     
 if show_summary:
     print(fis.model.summary())
+
+sns.heatmap(state_similarity.T, fmt="f", xticklabels=250,cbar_kws={"orientation": "horizontal"},
+        vmin = state_similarity.min(), vmax=state_similarity.max(),
+        cmap=None)  # twilight_shifted
+#sns.pairplot(df_states)

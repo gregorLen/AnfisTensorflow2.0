@@ -19,8 +19,8 @@ import seaborn as sns
 opti = optimizers.SGD(learning_rate=0.2, momentum=0.01, nesterov=False)
 
 param = myanfis.fis_parameters(
-            n_input = 3,                # no. of Regressors
-            n_memb = 3,                 # no. of fuzzy memberships
+            n_input = 2,                # no. of Regressors
+            n_memb = 2,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',     # 'gaussian' / 'bell'
             optimizer = 'adam',         # sgd / adam / ...
@@ -30,7 +30,7 @@ param = myanfis.fis_parameters(
 
 ## Data Parameters
 n_obs = param.batch_size * 100
-data_set = 2                           # 1 = regression / 2 = mackey / 3 = sinc/ 
+data_set = 1                           # 1 = regression / 2 = mackey / 3 = sinc/ 
                                         # 4 = Three-Input Nonlin /5 = diabetes
 ## General Parameters
 plot_learningcurves = True              # True / False
