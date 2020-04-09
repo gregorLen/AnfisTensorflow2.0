@@ -9,12 +9,8 @@ class MRS:
                         P = np.array([            [0.989, 0.01,   0.001],        ## Transition Matrix
                                                   [0.03,  0.969,  0.001], 
                                                   [0.00,  0.03,   0.97] ]),
-                       # P = np.array([             [0.98, 0.01,   0.01],        ## Transition Matrix
-                       #                            [0.03,  0.969,  0.001], 
-                       #                            [0.00,  0.03,   0.97] ]),
                         
                         mu_params =     np.array( [0.07,0.0,-0.55]) ,
-                        # mu_params =     np.array( [0.08,0.0,-0.60]) ,
                         
                         sigma_params =  np.array( [.1,.25,.60]),
                         
@@ -70,6 +66,7 @@ class MRS:
             self.r[t] = mu + e[t] + self.AR_params[state,0]*self.r[t-1] + self.AR_params[state,1]*self.r[t-2]
         self.y = 10*np.exp(np.cumsum(self.r))
     def plot_sim(self, colored=True):
+        "Plot generated data"
         plt.style.use('ggplot')
         r = self.r
         mc = self.markovchain

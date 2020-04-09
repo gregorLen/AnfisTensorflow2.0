@@ -7,52 +7,58 @@ from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_regression
+from markovstate_generator import MRS
 ##############################################################################
 
-def gen_data(data_set, n_obs, n_input):
+def gen_data(data_set, n_obs, n_input, batch_size=16):
     
-    scaler = StandardScaler()    # data will be standadized
+    # Markov Regime switching ts
+    if data_set == 1:  
+        mrs_model = MRS()
+        mrs_model.sim(n_obs+n_input)
+        mrs_model.plot_sim(colored=True)
+        X, y = gen_X_from_y(mrs_model.r, n_input, 16)
+        
+    # Mackey    
+    elif data_set == 2: 
+        y = mackey(300+n_obs+n_input)[300:]
+        X, y = gen_X_from_y(y, n_input, 16)
+   
+    # Nonlin sinc equation             
+    elif data_set == 3:  
+        X, y = sinc_data(n_obs)
+        assert n_input == 2, 'Nonlin sinc equation data set requires n_input==2. Please chhange to 2.'
     
-    if data_set == 1: 
-        # creates a regression-type problem with noise. One Regressor is non-informative.
+
+    # Nonlin three-input equation    
+    elif data_set == 4:  
+        X, y = nonlin_data(n_obs)
+        assert n_input == 3, 'Nonlin Three-Input Equation required n_input==3. Please switch to 3.'
+        
+    # diabetes dataset from sklean
+    elif data_set == 5: 
+        n_obs = 400
+        print('Dataset diabetes is limited to 400 observations')
+        X, y = load_diabetes(return_X_y=True)
+        X, y = X[:n_obs,0:n_input].astype('float32'), y[:n_obs].astype('float32').reshape(-1,1)
+
+    # artificial regression-type
+    elif data_set == 6: 
         X, y = make_regression(n_samples=n_obs, 
                                n_features=n_input, 
                                n_informative=n_input, 
                                n_targets=1, 
                                noise=20     
                                )
-        
         X, y = X.astype('float32'), y.astype('float32').reshape(-1,1)
-        X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4)   
-        
-    elif data_set == 2: 
-        X, y = mackey_data(n_obs, n_input, 1)
-        X = scaler.fit_transform(X)
-        X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4)    
-        
-    elif data_set == 3: 
-        X, y = sinc_data(n_obs)
-        X = scaler.fit_transform(X)
-        X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4)
-        if n_input != 2:
-            n_input = 2 
-            print('Nonlin sinc equation data set requires n_input==3. Switched to 2.')
-        
-    elif data_set == 4: 
-        X, y = nonlin_data(n_obs)
-        X = scaler.fit_transform(X)
-        X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4)
-        if n_input != 3:
-            n_input = 3 
-            print('Nonlin Three-Input data set requires n_input==3. Switched to 3.')
-        
-    elif data_set == 5: 
-        n_obs = 432
-        print('Dataset diabetes is limited to 432 observations')
-        X, y = load_diabetes(return_X_y=True)
-        X = scaler.fit_transform(X)
-        X, y = X[:n_obs,0:n_input].astype('float32'), y[:n_obs].astype('float32').reshape(-1,1)
-        X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.37)
+    
+    # standardize   
+    scaler = StandardScaler()   
+    X = scaler.fit_transform(X)
+    
+    # split
+    split_size = .4
+    X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4) 
 
     return X, X_train, X_test, y, y_train, y_test
 
@@ -68,20 +74,6 @@ def mackey(n_iters):
         y = ((0.2 * b) / (1 + b ** 10)) + 0.9 * a
         x[i + 1] = y
     return x
-
-def mackey_data(n_obs, n_input=1, D=1, noise=False):
-    x = mackey(300+n_obs+n_input*D)[300:]
-    data = np.zeros((n_obs, n_input+1))
-       
-    for t in range(n_input*D, n_obs + n_input*D):
-        data[t - n_input*D,:] = [x[t-i*D] for i in range(n_input+1)]
-        X = data[:,1:]
-        y = data[:,0].reshape(n_obs,1)
-        if noise == True:
-            y = y + np.random.randn(n_obs).reshape(-1,1)*0.15 
-        
-    return X.astype('float32'), y.astype('float32')
-
 
 # Modelling a two-Input Nonlinear Function (Sinc Equation)
 def sinc_equation(x1,x2):
@@ -107,7 +99,7 @@ def nonlin_data(n_obs, multiplier=1, noise=False):
     return X.astype('float32'), y.astype('float32')
 
 
-# Generate a general input matrix X from time series
+# Generate a input matrix X from time series y
 def gen_X_from_y(x, n_input=1, batch_size=16):    
     n_obs = len(x)-n_input
     n_obs = n_obs - n_obs % batch_size  # ensure a size that is n_obs % batch_size == 0

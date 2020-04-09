@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['data_sim.py', 'exp_state_detection.py', 'exp_anfis.py']
+recent_files = ['myanfis.py', 'sim_state_detection.py', 'markovstate_generator.py', 'sim_anfis.py']
 

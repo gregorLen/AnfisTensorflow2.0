@@ -4,9 +4,7 @@ BASE SIMULATION MYANFIS (SANDBOX)
 import myanfis
 import numpy as np
 import time
-import tensorflow.keras.optimizers as optimizers
-import tensorflow.keras.losses as losses
-import data_sim as sim
+import data_gen as gen
 import tensorflow as tf
 import datetime
 import os
@@ -14,43 +12,43 @@ from tensorflow.keras.callbacks import TensorBoard
 import pandas as pd 
 import matplotlib.pyplot as plt
 import seaborn as sns
+# import tensorflow.keras.optimizers as optimizers    # <-- for specifying optimizer
 ##############################################################################
 ## Model Parameter
-opti = optimizers.SGD(learning_rate=0.2, momentum=0.01, nesterov=False)
-
 param = myanfis.fis_parameters(
-            n_input = 2,                # no. of Regressors
-            n_memb = 2,                 # no. of fuzzy memberships
+            n_input = 4,                # no. of Regressors
+            n_memb = 3,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',     # 'gaussian' / 'bell'
-            optimizer = 'adam',         # sgd / adam / ...
+            optimizer = 'adam',          # sgd / adam / ...
             loss = 'huber_loss',        # mse / mae / huber_loss / hinge / ...
-            n_epochs = 30               # 10 / 25 / 50 / 100 / ...
+            n_epochs = 20               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
-n_obs = param.batch_size * 100
-data_set = 1                           # 1 = regression / 2 = mackey / 3 = sinc/ 
-                                        # 4 = Three-Input Nonlin /5 = diabetes
+n_obs = 2080
+data_set = 2                            # 1 = markov regime switching ts / 
+                                        # 2 = mackey / 3 = sinc/ 
+                                        # 4 = Three-Input Nonlin /5 = diabetes / 
+                                        # 6 = artificial regression
 ## General Parameters
 plot_learningcurves = True              # True / False
 plot_mfs = True                         # True / False
-plot_heatmap =True                      # True / False
+plot_heatmap = True                     # True / False
 show_summary = True                     # True / False
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
 ##############################################################################    
 # Generate Data
-X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set, n_obs, param.n_input)
+X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_set, n_obs, param.n_input, param.batch_size)
 
-# Make ANFIS
-tf.debugging.set_log_device_placement(show_core_usage) # find out which devices your operations and tensors are assigned to
+# show which devices your operations are assigned to
+tf.debugging.set_log_device_placement(show_core_usage) 
 
 with tf.device(core):  # CPU / GPU
-    
     # set tensorboard call back
     log_name = f'-data_{data_set}_N{param.n_input}_M{param.n_memb}_batch{param.batch_size}_{param.memb_func}_{param.optimizer}_{param.loss}'
-    log_path = os.path.join("logs", "sim_anfis",
+    log_path = os.path.join("logs", "run_anfis",
                         datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
                         + log_name
                         )
@@ -67,7 +65,7 @@ with tf.device(core):  # CPU / GPU
     # compile model
     fis.model.compile(optimizer=param.optimizer, 
                       loss=param.loss 
-                      ,metrics=['mae', 'mse']
+                      ,metrics=['mse']  # ['mae', 'mse']
                       )
     
     # fit model
@@ -92,26 +90,26 @@ if plot_learningcurves:
     loss_curves.plot(figsize=(8, 5))
     plt.grid(True)
     plt.show()
-    
+
+memberships = fis.get_memberships(X)    
 y_pred = fis.model.predict(X)
-if data_set == 1 or 2 or 3:
-    plt.subplot(2,1,1)
-    plt.plot(y)
-    plt.plot(y_pred, alpha=.5)
-    plt.legend(['Real', 'Predicted'])
-    plt.subplot(2,1,2)
-    plt.plot(np.arange(y.shape[0]), y - y_pred)
-    plt.legend(['pred_error'])
-    plt.show()
-    
-if plot_heatmap:
-    state_similarity = fis.get_state_similarity(X)
-    sns.heatmap(state_similarity.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
-            vmin = state_similarity.min(), vmax=state_similarity.max(),
+
+f, axs = plt.subplots(3,1,figsize=(8,15))
+plt.subplot(3,1,1)
+plt.plot(y)
+plt.plot(y_pred, alpha=.5)
+plt.legend(['Real', 'Predicted'])
+plt.subplot(3,1,2)
+plt.plot(np.arange(y.shape[0]), y - y_pred)
+plt.legend(['pred_error'])
+plt.subplot(3,1,3)
+sns.heatmap(memberships.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
+            vmin = memberships.min(), vmax=memberships.max(),
             cmap=None)  # twilight_shifted
-    states = np.argmax(state_similarity, axis=1)
-    state_distribution = pd.crosstab(states, columns='count')
-    
+#plt.stackplot(np.arange(memberships.shape[0]),memberships.T)  # alternative
+plt.show()
+
+        
 if show_summary:
     print(fis.model.summary())
 

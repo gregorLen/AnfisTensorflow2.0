@@ -22,7 +22,85 @@ class fis_parameters():
         self.memb_func = memb_func  # 'gaussian' / 'bell'
         self.optimizer = optimizer   # sgd / adam / 
         self.loss = loss     ## mse / mae
+
+class ANFIS:
+    def __init__(self, n_input, n_memb, batch_size=16, memb_func = 'gaussian', name = 'MyAnfis'):
+        self.n = n_input
+        self.m = n_memb    
+        self.batch_size = batch_size   
+        self.memb_func = memb_func
+        input_ = keras.layers.Input(shape=(n_input), name='inputLayer', batch_size = batch_size) 
+        L1 = FuzzyLayer(n_input, n_memb, memb_func, name='fuzzyLayer')(input_)
+        L2 = RuleLayer(n_input, n_memb, name='ruleLayer')(L1)     
+        L3 = NormLayer(name='normLayer')(L2)         
+        L4 = DefuzzLayer(n_input, n_memb, name='defuzzLayer')(L3, input_)
+        L5 = SummationLayer(name='sumLayer')(L4)
+        self.model = keras.Model(inputs=[input_], outputs=[L5], name = name)  
+        self.update_weights()
+    
+    def __call__(self, X):
+        return self.model.predict(X)
+                
+    def update_weights(self):
+        # premise parameters (mu&sigma for gaussian // a/b/c for bell-shaped)      
+        if self.memb_func == 'gaussian':
+            self.mus , self.sigmas = self.model.get_layer('fuzzyLayer').get_weights()
+        elif self.memb_func == 'bell':
+            self.a , self.b, self.c = self.model.get_layer('fuzzyLayer').get_weights()
+        # consequence parameters
+        self.bias, self.weights = self.model.get_layer('defuzzLayer').get_weights()
+            
+    def plotmfs(self):
+        if self.memb_func == 'gaussian':
+            mus, sigmas = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)
+            plt.style.use('ggplot')
+            for i in range(mus.shape[1]):
+                if np.mod(i, 4) == 0:
+                    plt_n = 0
+                    f, axes = plt.subplots(4, figsize=(5,15))
+                xn = np.linspace(np.min(mus[:,i])-2*np.max(abs(sigmas[:,i])),np.max(mus[:,i])+2*np.max(abs(sigmas[:,i])), 2000)
+                axes[plt_n].set_title(f'X[:,{i+1}]')
+                for m in range(mus.shape[0]):
+                    axes[plt_n].plot(xn, np.exp(-np.square((xn-mus[m,i]))/np.square(sigmas[m,i])), label = '$\mu$='+str(mus[m,i]))
+                axes[plt_n].legend(loc='upper left', fontsize=10)
+                axes[plt_n].axvline(0,0,1, alpha=.2, c='k')
+                plt_n += 1
+                if np.mod(i+1, 4) == 0:
+                    f.show()
+                    
+        elif self.memb_func == 'bell':    
+            a, b, c = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)
+            plt.style.use('ggplot')
+            for i in range(a.shape[1]):
+                if np.mod(i, 4) == 0:
+                    plt_n = 0
+                    f, axes = plt.subplots(4, figsize=(5,15))
+                xn = np.linspace(np.min(c[:,i])-2*np.max(abs(a[:,i])),np.max(c[:,i])+2*np.max(abs(a[:,i])), 200)
+                axes[plt_n].set_title(f'X[:,{i+1}]')
+                for m in range(a.shape[0]):
+                    axes[plt_n].plot(xn, 1/(1+np.square((xn-c[m,i])/a[m,i])*b[m,i]), label = '$\mu$(c)='+str(c[m,i]))
+                axes[plt_n].legend(loc='upper left', fontsize=10)
+                axes[plt_n].axvline(0,0,1, alpha=.2, c='k')
+                plt_n += 1
+                if np.mod(i+1, 4) == 0:
+                    pass#f.show()
+    
+    def fit(self, X, y, **kwargs):
+        history = self.model.fit(X,y, **kwargs)
+        print('model fitted.')
+        self.update_weights()
+        print('weights updated.')
+        tf.keras.backend.clear_session()  # clear the graphs
         
+        return history
+    
+    def get_memberships(self, Xs):
+        intermediate_layer_model = keras.Model(inputs = self.model.input, 
+                                               outputs = self.model.get_layer('normLayer').output)
+        intermediate_output = intermediate_layer_model.predict(Xs)
+        
+        return intermediate_output
+
 # Layer 1
 class FuzzyLayer(keras.layers.Layer):
     def __init__(self, n_input, n_memb, memb_func='gaussian', **kwargs):
@@ -192,87 +270,6 @@ class SummationLayer(keras.layers.Layer):
         return tf.TensorShape([self.batch_size,1])
     
     
-
-class ANFIS:
-    def __init__(self, n_input, n_memb, batch_size=16, memb_func = 'gaussian', name = 'MyAnfis'):
-        self.n = n_input
-        self.m = n_memb    
-        self.batch_size = batch_size   
-        self.memb_func = memb_func
-        input_ = keras.layers.Input(shape=(n_input), name='inputLayer', batch_size = batch_size) 
-        L1 = FuzzyLayer(n_input, n_memb, memb_func, name='fuzzyLayer')(input_)
-        L2 = RuleLayer(n_input, n_memb, name='ruleLayer')(L1)
-        L3 = NormLayer(name='normLayer')(L2)
-        L4 = DefuzzLayer(n_input, n_memb, name='defuzzLayer')(L3, input_)
-        L5 = SummationLayer(name='sumLayer')(L4)
-        self.model = keras.Model(inputs=[input_], outputs=[L5], name = name)  
-        self.update_weights()
-    
-    def __call__(self, X):
-        return self.model.predict(X)
-                
-    def update_weights(self):
-        # premise parameters (mu&sigma for gaussian // a/b/c for bell-shaped)      
-        if self.memb_func == 'gaussian':
-            self.mus , self.sigmas = self.model.get_layer('fuzzyLayer').get_weights()
-        elif self.memb_func == 'bell':
-            self.a , self.b, self.c = self.model.get_layer('fuzzyLayer').get_weights()
-        # consequence parameters
-        self.bias, self.weights = self.model.get_layer('defuzzLayer').get_weights()
-            
-    def plotmfs(self):
-        if self.memb_func == 'gaussian':
-            mus, sigmas = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)
-            plt.style.use('ggplot')
-            for i in range(mus.shape[1]):
-                if np.mod(i, 4) == 0:
-                    plt_n = 0
-                    f, axes = plt.subplots(4, figsize=(5,15))
-                xn = np.linspace(np.min(mus[:,i])-2*np.max(abs(sigmas[:,i])),np.max(mus[:,i])+2*np.max(abs(sigmas[:,i])), 2000)
-                axes[plt_n].set_title(f'X[:,{i+1}]')
-                for m in range(mus.shape[0]):
-                    axes[plt_n].plot(xn, np.exp(-np.square((xn-mus[m,i]))/np.square(sigmas[m,i])), label = '$\mu$='+str(mus[m,i]))
-                axes[plt_n].legend(loc='upper left', fontsize=10)
-                axes[plt_n].axvline(0,0,1, alpha=.2, c='k')
-                plt_n += 1
-                if np.mod(i+1, 4) == 0:
-                    f.show()
-                    
-        elif self.memb_func == 'bell':    
-            a, b, c = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)
-            plt.style.use('ggplot')
-            for i in range(a.shape[1]):
-                if np.mod(i, 4) == 0:
-                    plt_n = 0
-                    f, axes = plt.subplots(4, figsize=(5,15))
-                xn = np.linspace(np.min(c[:,i])-2*np.max(abs(a[:,i])),np.max(c[:,i])+2*np.max(abs(a[:,i])), 200)
-                axes[plt_n].set_title(f'X[:,{i+1}]')
-                for m in range(a.shape[0]):
-                    axes[plt_n].plot(xn, 1/(1+np.square((xn-c[m,i])/a[m,i])*b[m,i]), label = '$\mu$(c)='+str(c[m,i]))
-                axes[plt_n].legend(loc='upper left', fontsize=10)
-                axes[plt_n].axvline(0,0,1, alpha=.2, c='k')
-                plt_n += 1
-                if np.mod(i+1, 4) == 0:
-                    pass#f.show()
-    
-    def fit(self, X, y, **kwargs):
-        history = self.model.fit(X,y, **kwargs)
-        print('model fitted.')
-        self.update_weights()
-        print('weights updated.')
-        tf.keras.backend.clear_session()  # clear the graphs
-        
-        return history
-    
-    def get_state_similarity(self, Xs):
-        intermediate_layer_model = keras.Model(inputs = self.model.input, 
-                                               outputs = self.model.get_layer('normLayer').output)
-        intermediate_output = intermediate_layer_model.predict(Xs)
-        
-        return intermediate_output
-
-
-
 
 ####  manually check ANFIS Layers step-by-step
 

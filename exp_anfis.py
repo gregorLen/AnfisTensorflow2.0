@@ -4,7 +4,7 @@ Experiment for Anfis Sandbox
 import myanfis
 import numpy as np
 import time
-import data_sim as sim
+import data_gen as gen
 import tensorflow as tf
 import datetime
 import os
@@ -13,11 +13,11 @@ from tensorboard.plugins.hparams import api as hp
 ##############################################################################
 ## Initializing HyperParameters 
 n_input = [2,3,5]
-HP_n_input = hp.HParam('n_ipnut', hp.Discrete(n_input))                   # no. of Regressors
-HP_n_memb = hp.HParam('n_memb', hp.Discrete([2,3,4,5]))                     # no. of fuzzy memberships
-HP_memb_func = hp.HParam('memb_func', hp.Discrete(['gaussian', 'bell']))     # 'gaussian' / 'bell'
-HP_optimizer = hp.HParam('optimizer', hp.Discrete(['nadam', 'adam', 'sgd']))         # sgd / adam / ...
-HP_loss = hp.HParam('loss', hp.Discrete(['mse', 'mae', 'huber_loss']))      # mse / mae / huber_loss / hinge / ... 
+HP_n_input = hp.HParam('n_ipnut', hp.Discrete(n_input))                         # no. of Regressors
+HP_n_memb = hp.HParam('n_memb', hp.Discrete([2,3,4,5]))                         # no. of fuzzy memberships
+HP_memb_func = hp.HParam('memb_func', hp.Discrete(['gaussian', 'bell']))        # 'gaussian' / 'bell'
+HP_optimizer = hp.HParam('optimizer', hp.Discrete(['nadam', 'adam', 'sgd']))    # sgd / adam / ...
+HP_loss = hp.HParam('loss', hp.Discrete(['mse', 'mae', 'huber_loss']))          # mse / mae / huber_loss / hinge / ... 
 METRIC = 'mse'
 
 # Model Parameters
@@ -25,14 +25,15 @@ batch_size = 16
 n_epochs = 30     
 
 ## Data Parameters
-n_obs = 2000                            # will be adjusted for batch size
-data_set = 2                            # 1 = regression / 2 = mackey / 3 = sinc/ 
-                                        # 4 = Three-Input Nonlin /5 = diabetes
+n_obs = 2000                           
+data_set = 2                            # 1 = markov regime switching ts / 
+                                        # 2 = mackey / 3 = sinc/ 
+                                        # 4 = Three-Input Nonlin /5 = diabetes / 
+                                        # 6 = artificial regression
 
 ## General Parameters
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
-# to call tensorboard type in prompt >> tensorboard --logdir=logs/sim_anfis
 ##############################################################################    
 # find out which devices your operations and tensors are assigned to
 tf.debugging.set_log_device_placement(show_core_usage)
@@ -81,7 +82,7 @@ def run(logdir, hparams):
         tf.summary.scalar(METRIC, evaluation, step=1)
 
 # Generate Data (same for every session)
-X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set, n_obs - n_obs%batch_size, max(n_input))
+X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_set, n_obs - n_obs%batch_size, max(n_input))
 
 # Start experiment
 start_time = time.time()
@@ -103,7 +104,7 @@ with tf.device(core):  # CPU / GPU
                       
                       # generate log path
                       session_name = f'-N{n_input}_M{n_memb}_{memb_func}_{optimizer}_{loss}'
-                      logdir = os.path.join("logs", "exp_anfis",
+                      logdir = os.path.join("logs", "exp_anfis2",
                                             datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
                                             + session_name
                                             )
