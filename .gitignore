@@ -4,7 +4,4 @@ venv
 env
 .pytest_cache
 .coverage
-logs/*
-!logs/exp_anfis/*
-!logs/exp_state_detection/*
-
+logs/run_anfis

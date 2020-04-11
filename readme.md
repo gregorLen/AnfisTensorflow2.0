@@ -1,4 +1,4 @@
-# ANFIS Tensoflow 2.0
+# [WORK IN PROGRASS] ANFIS Tensoflow 2.0
 A simple implementation of [Adaptive-Network-Based Fuzzy Inference System (ANFIS)](https://www.researchgate.net/publication/3113825_ANFIS_Adaptive-Network-based_Fuzzy_Inference_System) based on [Tensorflow 2.0](https://www.tensorflow.org/guide) and [Keras](https://keras.io/). 
 
 ## 1. Features
@@ -30,7 +30,7 @@ For [hyperparameter tuning](https://www.tensorflow.org/tensorboard/hyperparamete
 
 - tensorflow 2.0.0 (or 2.1.0)
 - numpy (1.18.1)
-- matlab (3.1.3)
+- matplotlib (3.1.3)
 - pandas (1.0.1)
 - sklearn (0.22.1)
 - seaborn (0.10.0)
@@ -69,7 +69,7 @@ history = fis.fit(X_train, y_train,
 
 
 ---
-## 4. Using Tensoboard
+## 4. Using Tensorboard
 Tensorboard provides visualization and tooling needed for machine learning experimentation. Further information can be found [here](https://www.tensorflow.org/tensorboard)
 #### Step 0: Define a callback in code
 ```python
