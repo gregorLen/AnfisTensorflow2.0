@@ -5,3 +5,4 @@ env
 .pytest_cache
 .coverage
 logs/run_anfis
+.spyproject

@@ -45,7 +45,7 @@ import myanfis
 import data_gen as gen
 import tensorflow as tf
 
-param_obj = myanfis.fis_parameters()    # default parameters
+param_obj = myanfis.fis_parameters(n_input=4, n_memb=3)    
 
 X, X_train, X_test, y, y_train, y_test = sim.gen_data(data_set=2,       # pick a data set (mackey)
                                                         n_obs=2080,     # length of data set
@@ -66,6 +66,40 @@ history = fis.fit(X_train, y_train,
                   batch_size=param.batch_size,
                   validation_data = (X_test, y_test) )  
 ```
+You can use various plots to visualize results. Plotting the membershipfunctions is part of the ANFIS class:
+```python
+fis.plotmfs()
+```
+![plot membership functions](https://raw.githubusercontent.com/gregorLen/MyAnfis/master/imgs/memb_funcs.png?token=ALUKURJLOG5V44WOITIWZ2C6TVWGQ)
+Or learning curves:
+```python
+loss_curves = pd.DataFrame(history.history)
+    loss_curves.plot(figsize=(8, 5))
+    plt.grid(True)
+    plt.show()
+``` 
+![plot learning curves](https://raw.githubusercontent.com/gregorLen/MyAnfis/master/imgs/learning_curves.png?token=ALUKURMCJLQKGVXTFR4X4BK6TVWGI)
+... or you can show your fitted outcome vs. the true values:
+```python
+memberships = fis.get_memberships(X)    
+y_pred = fis.model.predict(X)
+
+f, axs = plt.subplots(3,1,figsize=(8,15))
+plt.subplot(3,1,1)
+plt.plot(y)
+plt.plot(y_pred, alpha=.5)
+plt.legend(['Real', 'Predicted'])
+plt.subplot(3,1,2)
+plt.plot(np.arange(y.shape[0]), y - y_pred)
+plt.legend(['pred_error'])
+plt.subplot(3,1,3)
+sns.heatmap(memberships.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
+            vmin = memberships.min(), vmax=memberships.max())
+#plt.stackplot(np.arange(memberships.shape[0]),memberships.T)  # alternative
+plt.show()
+```
+![fitted_vs_true_values](https://raw.githubusercontent.com/gregorLen/MyAnfis/master/imgs/predictions.png?token=ALUKURIVSU56AKVY2V7H6LK6TVWG2)
+
 
 
 ---
