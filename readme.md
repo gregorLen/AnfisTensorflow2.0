@@ -28,7 +28,8 @@ You can choose from various parameters to set inputs, membershipfunctions, losse
 For [hyperparameter tuning](https://www.tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams) you can run `exp_anfis.py` which tunes `n_input`, `n_memb`, `memb_func`, `loss` and `optimizer` depending an arbitrary metric and data set. The experiment also includes a callback for [Tensorboard](https://www.tensorflow.org/tensorboard) (see 4. Using Tensorboard).
 ## 2. Dependencies
 
-- tensorflow 2.0.0 (or 2.1.0)
+- Python 3.5-3.7
+- tensorflow 2.0.0 (or higher)
 - numpy (1.18.1)
 - matplotlib (3.1.3)
 - pandas (1.0.1)
@@ -136,6 +137,10 @@ history = fis.fit(...
 ---
 ## 5. TO DO
 - sigmoid membership function
+## 6. Related Work
+- [bare-bones implementation of ANFIS](https://github.com/twmeggs/anfis) (manual derivatives) by [twmeggs](https://github.com/twmeggs) 
+- [PyTorch implementation](https://github.com/jfpower/anfis-pytorch) by [James Power](http://www.cs.nuim.ie/~jpower/)
+- [simple ANFIS based on Tensorflow 1.15.2](https://github.com/tiagoCuervo/TensorANFIS) by [Santiago Cuervo](https://github.com/tiagoCuervo)
 ---
-## 6. Contact
+## 7. Contact
 I am very thankful for any kind of feedback. Also, if you have questions, please contact gregor.lenhard@unibas.ch
