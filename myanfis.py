@@ -51,39 +51,39 @@ class ANFIS:
         self.bias, self.weights = self.model.get_layer('defuzzLayer').get_weights()
             
     def plotmfs(self):
+        n_input = self.n 
+        n_memb = self.m 
+        
         if self.memb_func == 'gaussian':
-            mus, sigmas = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)
-            plt.style.use('ggplot')
-            for i in range(mus.shape[1]):
-                if np.mod(i, 4) == 0:
-                    plt_n = 0
-                    f, axes = plt.subplots(4, figsize=(5,15))
-                xn = np.linspace(np.min(mus[:,i])-2*np.max(abs(sigmas[:,i])),np.max(mus[:,i])+2*np.max(abs(sigmas[:,i])), 2000)
-                axes[plt_n].set_title(f'X[:,{i+1}]')
-                for m in range(mus.shape[0]):
-                    axes[plt_n].plot(xn, np.exp(-np.square((xn-mus[m,i]))/np.square(sigmas[m,i])), label = '$\mu$='+str(mus[m,i]))
-                axes[plt_n].legend(loc='upper left', fontsize=10)
-                axes[plt_n].axvline(0,0,1, alpha=.2, c='k')
-                plt_n += 1
-                if np.mod(i+1, 4) == 0:
-                    f.show()
-                    
-        elif self.memb_func == 'bell':    
-            a, b, c = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)
-            plt.style.use('ggplot')
-            for i in range(a.shape[1]):
-                if np.mod(i, 4) == 0:
-                    plt_n = 0
-                    f, axes = plt.subplots(4, figsize=(5,15))
-                xn = np.linspace(np.min(c[:,i])-2*np.max(abs(a[:,i])),np.max(c[:,i])+2*np.max(abs(a[:,i])), 200)
-                axes[plt_n].set_title(f'X[:,{i+1}]')
-                for m in range(a.shape[0]):
-                    axes[plt_n].plot(xn, 1/(1+np.square((xn-c[m,i])/a[m,i])*b[m,i]), label = '$\mu$(c)='+str(c[m,i]))
-                axes[plt_n].legend(loc='upper left', fontsize=10)
-                axes[plt_n].axvline(0,0,1, alpha=.2, c='k')
-                plt_n += 1
-                if np.mod(i+1, 4) == 0:
-                    pass#f.show()
+            mus, sigmas = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)   
+            mus, sigmas = mus.reshape((n_memb, n_input, 1)), sigmas.reshape(n_memb , n_input, 1)
+            
+            xn = np.linspace(np.min(mus)-2*np.max(abs(sigmas)),np.max(mus)+2*np.max(abs(sigmas)), 100).reshape((1,1,-1))
+            xn = np.tile(xn, (n_memb, n_input, 1))
+            
+            # broadcast all curves in one array
+            memb_curves = np.exp(-np.square((xn-mus))/np.square(sigmas))
+            
+        elif self.memb_func == 'bell': 
+            a, b, c = np.around(self.model.get_layer('fuzzyLayer').get_weights(),2)    
+            a, b, c = a.reshape((n_memb, n_input, 1)), b.reshape(n_memb, n_input, 1), c.reshape(n_memb, n_input, 1)
+            
+            xn = np.linspace(np.min(c)-2*np.max(abs(a)),np.max(c)+2*np.max(abs(a)), 100).reshape((1,1,-1))
+            xn = np.tile(xn, (n_memb, n_input, 1))
+            
+            # broadcast all curves in one array
+            memb_curves= 1/(1+np.square((xn-c)/a)*b)
+        
+        # plot curves    
+        fig, axs = plt.subplots(nrows=n_input, ncols=1, figsize=(8, self.n*3))
+        fig.suptitle('Membership functions', size=16)
+        for n in range(self.n):
+            axs[n].grid(True)
+            axs[n].set_title(f'Input {n+1}')
+            for m in range(self.m):
+                axs[n].plot(xn[m,n,:], memb_curves[m,n,:])
+        plt.show()
+    
     
     def fit(self, X, y, **kwargs):
         history = self.model.fit(X,y, **kwargs)

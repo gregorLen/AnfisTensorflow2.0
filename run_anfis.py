@@ -16,13 +16,13 @@ import seaborn as sns
 ##############################################################################
 ## Model Parameter
 param = myanfis.fis_parameters(
-            n_input = 4,                # no. of Regressors
+            n_input = 3,                # no. of Regressors
             n_memb = 3,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',     # 'gaussian' / 'bell'
             optimizer = 'adam',          # sgd / adam / ...
             loss = 'huber_loss',        # mse / mae / huber_loss / hinge / ...
-            n_epochs = 20               # 10 / 25 / 50 / 100 / ...
+            n_epochs = 30               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
@@ -32,9 +32,11 @@ data_set = 2                            # 1 = markov regime switching ts /
                                         # 4 = Three-Input Nonlin /5 = diabetes / 
                                         # 6 = artificial regression
 ## General Parameters
+plt.style.use('seaborn')                # default / ggplot / seaborn
+plot_prediction = True                  # True / False
 plot_learningcurves = True              # True / False
 plot_mfs = True                         # True / False
-plot_heatmap = True                     # True / False
+plot_heatmap = False                     # True / False
 show_summary = True                     # True / False
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
@@ -82,6 +84,21 @@ with tf.device(core):  # CPU / GPU
 
 # ## Evaluate Model
 # fis.model.evaluate(X_test, y_test)  
+if plot_prediction:
+    y_pred = fis.model.predict(X)
+    f, axs = plt.subplots(2,1,figsize=(8,10))
+    f.suptitle('Mackey time series', size=16)
+    axs[0].plot(y)
+    axs[0].plot(y_pred, alpha=.7)
+    axs[0].legend(['Real', 'Predicted'])
+    axs[0].grid(True)
+    axs[0].set_title('Real vs. Predicted values')
+    axs[1].plot(np.arange(y.shape[0]), y - y_pred)
+    axs[1].legend(['pred_error'])
+    axs[1].grid(True)
+    axs[1].set_title('Prediction Error')
+    plt.show()
+
 if plot_mfs:
     fis.plotmfs()
 
@@ -91,26 +108,17 @@ if plot_learningcurves:
     plt.grid(True)
     plt.show()
 
-memberships = fis.get_memberships(X)    
-y_pred = fis.model.predict(X)
-
-f, axs = plt.subplots(3,1,figsize=(8,15))
-plt.subplot(3,1,1)
-plt.plot(y)
-plt.plot(y_pred, alpha=.5)
-plt.legend(['Real', 'Predicted'])
-plt.subplot(3,1,2)
-plt.plot(np.arange(y.shape[0]), y - y_pred)
-plt.legend(['pred_error'])
-plt.subplot(3,1,3)
-sns.heatmap(memberships.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
-            vmin = memberships.min(), vmax=memberships.max(),
-            cmap=None)  # twilight_shifted
-#plt.stackplot(np.arange(memberships.shape[0]),memberships.T)  # alternative
-plt.show()
-
+if plot_heatmap:
+    memberships = fis.get_memberships(X)  
+    sns.heatmap(memberships.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
+                vmin = memberships.min(), vmax=memberships.max(),
+                cmap=None)  # twilight_shifted
+    #plt.stackplot(np.arange(memberships.shape[0]),memberships.T)  # alternative
         
 if show_summary:
     print(fis.model.summary())
+
+
+
 
 
