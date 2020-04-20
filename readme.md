@@ -67,39 +67,44 @@ history = fis.fit(X_train, y_train,
                   batch_size=param.batch_size,
                   validation_data = (X_test, y_test) )  
 ```
-You can use various plots to visualize results. Plotting the membershipfunctions is part of the ANFIS class:
+You can use various plots to visualize results i.e. show fitted outcome vs. the true values:
 ```python
-fis.plotmfs()
+if plot_prediction:
+    y_pred = fis.model.predict(X)
+    f, axs = plt.subplots(2,1,figsize=(8,10))
+    f.suptitle('Mackey time series', size=16)
+    axs[0].plot(y)
+    axs[0].plot(y_pred, alpha=.7)
+    axs[0].legend(['Real', 'Predicted'])
+    axs[0].grid(True)
+    axs[0].set_title('Real vs. Predicted values')
+    axs[1].plot(np.arange(y.shape[0]), y - y_pred)
+    axs[1].legend(['pred_error'])
+    axs[1].grid(True)
+    axs[1].set_title('Prediction Error')
+    plt.show()
+```
+![fitted_vs_true_values](https://raw.githubusercontent.com/gregorLen/MyAnfis/master/imgs/predictions.png?token=ALUKURIVSU56AKVY2V7H6LK6TVWG2)
+
+
+
+Plotting the membershipfunctions is part of the ANFIS class:
+```python
+if plot_mfs:
+    fis.plotmfs()
+
 ```
 ![plot membership functions](https://raw.githubusercontent.com/gregorLen/MyAnfis/master/imgs/memb_funcs.png?token=ALUKURJLOG5V44WOITIWZ2C6TVWGQ)
 Or learning curves:
 ```python
-loss_curves = pd.DataFrame(history.history)
+if plot_learningcurves:
+    loss_curves = pd.DataFrame(history.history)
     loss_curves.plot(figsize=(8, 5))
     plt.grid(True)
     plt.show()
 ``` 
 ![plot learning curves](https://raw.githubusercontent.com/gregorLen/MyAnfis/master/imgs/learning_curves.png?token=ALUKURMCJLQKGVXTFR4X4BK6TVWGI)
-... or you can show your fitted outcome vs. the true values:
-```python
-memberships = fis.get_memberships(X)    
-y_pred = fis.model.predict(X)
 
-f, axs = plt.subplots(3,1,figsize=(8,15))
-plt.subplot(3,1,1)
-plt.plot(y)
-plt.plot(y_pred, alpha=.5)
-plt.legend(['Real', 'Predicted'])
-plt.subplot(3,1,2)
-plt.plot(np.arange(y.shape[0]), y - y_pred)
-plt.legend(['pred_error'])
-plt.subplot(3,1,3)
-sns.heatmap(memberships.T, fmt="f", xticklabels=200, yticklabels=False,cbar_kws={"orientation": "horizontal"},
-            vmin = memberships.min(), vmax=memberships.max())
-#plt.stackplot(np.arange(memberships.shape[0]),memberships.T)  # alternative
-plt.show()
-```
-![fitted_vs_true_values](https://raw.githubusercontent.com/gregorLen/MyAnfis/master/imgs/predictions.png?token=ALUKURIVSU56AKVY2V7H6LK6TVWG2)
 
 
 

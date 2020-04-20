@@ -8,47 +8,63 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_regression
 from markovstate_generator import MRS
+import matplotlib.pyplot as plt
+plt.rcParams['axes.xmargin'] = 0 # remove margins from all plots
 ##############################################################################
+def get_data_name(data_id):
+    data_sets = ['markovRS', 'mackey', 'sinc', 'threeInputNonlin', 'diabetes', 'regressoin']
+    
+    return data_sets[data_id]
 
-def gen_data(data_set, n_obs, n_input, batch_size=16):
+
+def gen_data(data_id, n_obs, n_input, batch_size=16):
     
     # Markov Regime switching ts
-    if data_set == 1:  
-        mrs_model = MRS()
+    if data_id == 0:  
+        np.random.seed(121)       # set a seed for reproducable results
+        mrs_model = MRS(P = np.array([[0.985, 0.01,   0.004],        
+                                      [0.03,  0.969,  0.001], 
+                                      [0.00,  0.03,   0.97] ]))
+        
         mrs_model.sim(n_obs+n_input)
         mrs_model.plot_sim(colored=True)
         X, y = gen_X_from_y(mrs_model.r, n_input, 16)
         
+        train_id = np.arange(n_obs*.6, dtype=int)
+        test_id = np.arange(n_obs*.6, n_obs, dtype=int)
+        
+        return X, X[train_id,:], X[test_id,:], y, y[train_id], y[test_id]
+        
     # Mackey    
-    elif data_set == 2: 
-        y = mackey(300+n_obs+n_input)[300:]
+    elif data_id == 1: 
+        y = mackey(124+n_obs+n_input)[124:]
         X, y = gen_X_from_y(y, n_input, 16)
    
     # Nonlin sinc equation             
-    elif data_set == 3:  
+    elif data_id == 2:  
         X, y = sinc_data(n_obs)
         assert n_input == 2, 'Nonlin sinc equation data set requires n_input==2. Please chhange to 2.'
     
 
     # Nonlin three-input equation    
-    elif data_set == 4:  
+    elif data_id == 3:  
         X, y = nonlin_data(n_obs)
         assert n_input == 3, 'Nonlin Three-Input Equation required n_input==3. Please switch to 3.'
         
     # diabetes dataset from sklean
-    elif data_set == 5: 
+    elif data_id == 4: 
         n_obs = 400
         print('Dataset diabetes is limited to 400 observations')
         X, y = load_diabetes(return_X_y=True)
         X, y = X[:n_obs,0:n_input].astype('float32'), y[:n_obs].astype('float32').reshape(-1,1)
 
     # artificial regression-type
-    elif data_set == 6: 
+    elif data_id == 5: 
         X, y = make_regression(n_samples=n_obs, 
                                n_features=n_input, 
                                n_informative=n_input, 
                                n_targets=1, 
-                               noise=20     
+                               noise= 20     
                                )
         X, y = X.astype('float32'), y.astype('float32').reshape(-1,1)
     

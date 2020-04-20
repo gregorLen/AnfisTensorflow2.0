@@ -19,37 +19,38 @@ param = myanfis.fis_parameters(
             n_input = 3,                # no. of Regressors
             n_memb = 3,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
-            memb_func = 'gaussian',     # 'gaussian' / 'bell'
+            memb_func = 'gaussian',      # 'gaussian' / 'gbellmf'
             optimizer = 'adam',          # sgd / adam / ...
             loss = 'huber_loss',        # mse / mae / huber_loss / hinge / ...
-            n_epochs = 30               # 10 / 25 / 50 / 100 / ...
+            n_epochs = 25               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
 n_obs = 2080
-data_set = 2                            # 1 = markov regime switching ts / 
-                                        # 2 = mackey / 3 = sinc/ 
-                                        # 4 = Three-Input Nonlin /5 = diabetes / 
-                                        # 6 = artificial regression
+data_id = 1                             # 0 = markov regime switching ts / 
+                                        # 1 = mackey / 2 = sinc/ 
+                                        # 3 = Three-Input Nonlin /4 = diabetes / 
+                                        # 5 = artificial regression
 ## General Parameters
 plt.style.use('seaborn')                # default / ggplot / seaborn
 plot_prediction = True                  # True / False
 plot_learningcurves = True              # True / False
 plot_mfs = True                         # True / False
-plot_heatmap = False                     # True / False
+show_initial_weights = True             # True / False
+plot_heatmap = True                     # True / False
 show_summary = True                     # True / False
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
 ##############################################################################    
 # Generate Data
-X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_set, n_obs, param.n_input, param.batch_size)
+X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_id, n_obs, param.n_input, param.batch_size)
 
 # show which devices your operations are assigned to
 tf.debugging.set_log_device_placement(show_core_usage) 
 
 with tf.device(core):  # CPU / GPU
     # set tensorboard call back
-    log_name = f'-data_{data_set}_N{param.n_input}_M{param.n_memb}_batch{param.batch_size}_{param.memb_func}_{param.optimizer}_{param.loss}'
+    log_name = f'-{gen.get_data_name(data_id)}_N{param.n_input}_M{param.n_memb}_batch{param.batch_size}_{param.memb_func}_{param.optimizer}_{param.loss}'
     log_path = os.path.join("logs", "run_anfis",
                         datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
                         + log_name
@@ -67,7 +68,7 @@ with tf.device(core):  # CPU / GPU
     # compile model
     fis.model.compile(optimizer=param.optimizer, 
                       loss=param.loss 
-                      ,metrics=['mse']  # ['mae', 'mse']
+                      #,metrics=['mse']  # ['mae', 'mse']
                       )
     
     # fit model
@@ -87,7 +88,7 @@ with tf.device(core):  # CPU / GPU
 if plot_prediction:
     y_pred = fis.model.predict(X)
     f, axs = plt.subplots(2,1,figsize=(8,10))
-    f.suptitle('Mackey time series', size=16)
+    f.suptitle(f'{gen.get_data_name(data_id)} time series', size=16)
     axs[0].plot(y)
     axs[0].plot(y_pred, alpha=.7)
     axs[0].legend(['Real', 'Predicted'])
@@ -100,7 +101,7 @@ if plot_prediction:
     plt.show()
 
 if plot_mfs:
-    fis.plotmfs()
+    fis.plotmfs(show_initial_weights)
 
 if plot_learningcurves:
     loss_curves = pd.DataFrame(history.history)
@@ -117,8 +118,5 @@ if plot_heatmap:
         
 if show_summary:
     print(fis.model.summary())
-
-
-
 
 
