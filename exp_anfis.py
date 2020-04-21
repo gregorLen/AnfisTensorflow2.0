@@ -15,21 +15,23 @@ from tensorboard.plugins.hparams import api as hp
 n_input = [2,3,5]
 HP_n_input = hp.HParam('n_ipnut', hp.Discrete(n_input))                         # no. of Regressors
 HP_n_memb = hp.HParam('n_memb', hp.Discrete([2,3,4,5]))                         # no. of fuzzy memberships
-HP_memb_func = hp.HParam('memb_func', hp.Discrete(['gaussian', 'bell']))        # 'gaussian' / 'bell'
-HP_optimizer = hp.HParam('optimizer', hp.Discrete(['nadam', 'adam', 'sgd']))    # sgd / adam / ...
+HP_memb_func = hp.HParam('memb_func', hp.Discrete(['gaussian', 'gbellmf']))        # 'gaussian' / 'bell'
+HP_optimizer = hp.HParam('optimizer', hp.Discrete(['adam', 'sgd']))    # sgd / adam / ...
 HP_loss = hp.HParam('loss', hp.Discrete(['mse', 'mae', 'huber_loss']))          # mse / mae / huber_loss / hinge / ... 
 METRIC = 'mse'
 
 # Model Parameters
 batch_size = 16 
-n_epochs = 30     
+n_epochs = 50     
 
 ## Data Parameters
-n_obs = 2000                           
-data_set = 2                            # 1 = markov regime switching ts / 
-                                        # 2 = mackey / 3 = sinc/ 
-                                        # 4 = Three-Input Nonlin /5 = diabetes / 
-                                        # 6 = artificial regression
+n_obs = 2000  
+lag = 1                         
+data_id = 1                             # 0 = markov regime switching ts / 
+                                        # 1 = mackey / 2 = sinc/ 
+              
+                          # 3 = Three-Input Nonlin /4 = diabetes / 
+                                        # 5 = artificial regression
 
 ## General Parameters
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
@@ -82,7 +84,7 @@ def run(logdir, hparams):
         tf.summary.scalar(METRIC, evaluation, step=1)
 
 # Generate Data (same for every session)
-X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_set, n_obs - n_obs%batch_size, max(n_input))
+X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_id, n_obs, max(n_input), batch_size, lag)
 
 # Start experiment
 start_time = time.time()
@@ -103,8 +105,8 @@ with tf.device(core):  # CPU / GPU
                                  }
                       
                       # generate log path
-                      session_name = f'-N{n_input}_M{n_memb}_{memb_func}_{optimizer}_{loss}'
-                      logdir = os.path.join("logs", "exp_anfis2",
+                      session_name = f'-{gen.get_data_name(data_id)}_N{n_input}_M{n_memb}_{memb_func}_{optimizer}_{loss}'
+                      logdir = os.path.join("logs", "exp_anfis",
                                             datetime.datetime.now().strftime("%Y%m%d-%H%M%S") 
                                             + session_name
                                             )

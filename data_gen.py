@@ -38,7 +38,7 @@ def gen_data(data_id, n_obs, n_input, batch_size=16, lag=1):
     
     # Markov Regime switching ts
     if data_id == 0:  
-        np.random.seed(121)       # set a seed for reproducable results
+        np.random.seed(1234)       # set a seed for reproducable results
         mrs_model = MRS(P = np.array([[0.985, 0.01,   0.004],        
                                       [0.03,  0.969,  0.001], 
                                       [0.00,  0.03,   0.97] ]))
