@@ -17,7 +17,24 @@ def get_data_name(data_id):
     return data_sets[data_id]
 
 
-def gen_data(data_id, n_obs, n_input, batch_size=16):
+def split_data(X, y, batch_size):
+    # adjust X and y for batch_size
+    adj_id = np.arange(len(y) - len(y)%batch_size)
+    X, y = X[adj_id, :], y[adj_id]
+    
+    # split test & train according to batches
+    batches = len(y) / batch_size
+    train_batches = np.round(batches*0.6) / batches
+    
+    train_id = np.arange(len(y)*train_batches, dtype=int)
+    test_id = np.arange(len(y)*train_batches, len(y), dtype=int)
+    
+    X_train, y_train, X_test, y_test = X[train_id,:], y[train_id], X[test_id,:], y[test_id]
+
+    return X, X_train, X_test, y, y_train, y_test
+
+
+def gen_data(data_id, n_obs, n_input, batch_size=16, lag=1):
     
     # Markov Regime switching ts
     if data_id == 0:  
@@ -28,23 +45,17 @@ def gen_data(data_id, n_obs, n_input, batch_size=16):
         
         mrs_model.sim(n_obs+n_input)
         mrs_model.plot_sim(colored=True)
-        X, y = gen_X_from_y(mrs_model.r, n_input, 16)
-        
-        train_id = np.arange(n_obs*.6, dtype=int)
-        test_id = np.arange(n_obs*.6, n_obs, dtype=int)
-        
-        return X, X[train_id,:], X[test_id,:], y, y[train_id], y[test_id]
+        X, y = gen_X_from_y(mrs_model.r, n_input, lag)
         
     # Mackey    
     elif data_id == 1: 
         y = mackey(124+n_obs+n_input)[124:]
-        X, y = gen_X_from_y(y, n_input, 16)
+        X, y = gen_X_from_y(y, n_input, lag)
    
     # Nonlin sinc equation             
     elif data_id == 2:  
         X, y = sinc_data(n_obs)
         assert n_input == 2, 'Nonlin sinc equation data set requires n_input==2. Please chhange to 2.'
-    
 
     # Nonlin three-input equation    
     elif data_id == 3:  
@@ -71,11 +82,15 @@ def gen_data(data_id, n_obs, n_input, batch_size=16):
     # standardize   
     scaler = StandardScaler()   
     X = scaler.fit_transform(X)
+          
+    # split data into test and train set
+    X, X_train, X_test, y, y_train, y_test = split_data(X, y, batch_size)
     
-    # split
-    split_size = .4
-    X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4) 
-
+    
+    # alternative: shuffle & split
+    # X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4) 
+    # X_train, X_test, y_train, y_test = adjust_for_batch_size(X_train, X_test, y_train, y_test, batch_size)
+    
     return X, X_train, X_test, y, y_train, y_test
 
 ##############################################################################
@@ -116,14 +131,36 @@ def nonlin_data(n_obs, multiplier=1, noise=False):
 
 
 # Generate a input matrix X from time series y
-def gen_X_from_y(x, n_input=1, batch_size=16):    
-    n_obs = len(x)-n_input
-    n_obs = n_obs - n_obs % batch_size  # ensure a size that is n_obs % batch_size == 0
-
+def gen_X_from_y(x, n_input=1, lag=1):    
+    n_obs = len(x) - n_input*lag
+    
     data = np.zeros((n_obs, n_input+1))
-    for t in range(n_input, n_obs + n_input):
-        data[t - n_input,:] = [x[t-i] for i in range(n_input+1)]
-        X = data[:,1:]
-        y = data[:,0].reshape(n_obs,1)
-        
+    for t in range(n_input*lag, n_obs + n_input*lag):
+        data[t - n_input*lag,:] = [x[t-i*lag] for i in range(n_input+1)]
+    X = data[:,1:].reshape(n_obs,-1)
+    y = data[:,0].reshape(n_obs,1)
+    
     return X.astype('float32'), y.astype('float32')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

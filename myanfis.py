@@ -23,7 +23,7 @@ class fis_parameters():
         self.loss = loss     ## mse / mae
 
 
-
+# Main Class ANFIS
 class ANFIS:
     def __init__(self, n_input, n_memb, batch_size=16, memb_func = 'gaussian', name = 'MyAnfis'):
         self.n = n_input
@@ -102,13 +102,15 @@ class ANFIS:
         
     
     def fit(self, X, y, **kwargs):
-        self.init_weights = self.model.get_layer('fuzzyLayer').get_weights()  # save initial weights before training
+        # save initial weights in the anfis class
+        self.init_weights = self.model.get_layer('fuzzyLayer').get_weights() 
         
+        # fit model & update weights in the anfis class
         history = self.model.fit(X,y, **kwargs)
-        print('model fitted.')
         self.update_weights()
-        print('weights updated.')
-        tf.keras.backend.clear_session()  # clear the graphs
+        
+        # clear the graphs
+        tf.keras.backend.clear_session()  
         
         return history
     
@@ -123,6 +125,10 @@ class ANFIS:
 
 # Custom weight initializer
 def equally_spaced_initializer(shape, minval=-1.5, maxval=1.5, dtype=tf.float32):
+    """
+    Custom weight initializer: 
+        euqlly spaced weights along an operating range of [minval, maxval].
+    """
     linspace = tf.reshape(tf.linspace(minval, maxval, shape[0]),
                           (-1,1))
     return tf.Variable(tf.tile(linspace, (1,shape[1])))

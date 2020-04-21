@@ -16,17 +16,18 @@ import seaborn as sns
 ##############################################################################
 ## Model Parameter
 param = myanfis.fis_parameters(
-            n_input = 3,                # no. of Regressors
-            n_memb = 3,                 # no. of fuzzy memberships
+            n_input = 4,                # no. of Regressors
+            n_memb = 2,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',      # 'gaussian' / 'gbellmf'
             optimizer = 'adam',          # sgd / adam / ...
-            loss = 'huber_loss',        # mse / mae / huber_loss / hinge / ...
-            n_epochs = 25               # 10 / 25 / 50 / 100 / ...
+            loss = 'mean_absolute_percentage_error',   # mse / mae / huber_loss / mean_absolute_percentage_error / ...
+            n_epochs = 100               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
-n_obs = 2080
+n_obs = 1000                            # might be adjusted for batch size!
+lag = 6
 data_id = 1                             # 0 = markov regime switching ts / 
                                         # 1 = mackey / 2 = sinc/ 
                                         # 3 = Three-Input Nonlin /4 = diabetes / 
@@ -43,7 +44,7 @@ core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
 ##############################################################################    
 # Generate Data
-X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_id, n_obs, param.n_input, param.batch_size)
+X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_id, n_obs, param.n_input, param.batch_size, lag)
 
 # show which devices your operations are assigned to
 tf.debugging.set_log_device_placement(show_core_usage) 
