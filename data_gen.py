@@ -7,7 +7,8 @@ from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_regression
-from markovstate_generator import MRS
+from MS_generator import MRS
+from STAR_generator import STAR
 import matplotlib.pyplot as plt
 plt.rcParams['axes.xmargin'] = 0 # remove margins from all plots
 ##############################################################################
@@ -35,49 +36,56 @@ def split_data(X, y, batch_size):
 
 
 def gen_data(data_id, n_obs, n_input, batch_size=16, lag=1):
-    
-    # Markov Regime switching ts
-    if data_id == 0:  
-        np.random.seed(1234)       # set a seed for reproducable results
-        mrs_model = MRS(P = np.array([[0.985, 0.01,   0.004],        
-                                      [0.03,  0.969,  0.001], 
-                                      [0.00,  0.03,   0.97] ]))
-        
-        mrs_model.sim(n_obs+n_input)
-        mrs_model.plot_sim(colored=True)
-        X, y = gen_X_from_y(mrs_model.r, n_input, lag)
-        
+            
     # Mackey    
-    elif data_id == 1: 
+    elif data_id == 0: 
         y = mackey(124+n_obs+n_input)[124:]
         X, y = gen_X_from_y(y, n_input, lag)
    
     # Nonlin sinc equation             
-    elif data_id == 2:  
+    elif data_id == 1:  
         X, y = sinc_data(n_obs)
         assert n_input == 2, 'Nonlin sinc equation data set requires n_input==2. Please chhange to 2.'
 
     # Nonlin three-input equation    
-    elif data_id == 3:  
+    elif data_id == 2:  
         X, y = nonlin_data(n_obs)
         assert n_input == 3, 'Nonlin Three-Input Equation required n_input==3. Please switch to 3.'
         
-    # diabetes dataset from sklean
-    elif data_id == 4: 
-        n_obs = 400
-        print('Dataset diabetes is limited to 400 observations')
-        X, y = load_diabetes(return_X_y=True)
-        X, y = X[:n_obs,0:n_input].astype('float32'), y[:n_obs].astype('float32').reshape(-1,1)
-
-    # artificial regression-type
-    elif data_id == 5: 
-        X, y = make_regression(n_samples=n_obs, 
-                               n_features=n_input, 
-                               n_informative=n_input, 
-                               n_targets=1, 
-                               noise= 20     
-                               )
-        X, y = X.astype('float32'), y.astype('float32').reshape(-1,1)
+    # Markov Regime switching ts
+    elif data_id == 3:  
+        mrs_model = MRS(P = np.array([[0.985, 0.01,   0.004],        
+                                      [0.03,  0.969,  0.001], 
+                                      [0.00,  0.03,   0.97] ]))
+        mrs_model.sim(n_obs+n_input)
+        mrs_model.plot(colored=True)
+        X, y = gen_X_from_y(mrs_model.r, n_input, lag)
+    
+    # Threshold Autoregressive Model (TAR)
+    elif data_id == 4:
+        mu_params =     np.array( [0.05, 0.05])
+        sigma_params =  np.array( [0.20, 0.20])                     
+        AR_params =     np.array([[0.55, 0 ],
+                                  [-0.30, 0] ])   
+        gamma = float('inf')
+        star_model = STAR(mu_params, sigma_params, AR_params, gamma)        
+        star_model.sim(n_obs+n_input)
+        star_model.plot(colored=True)
+        X, y = gen_X_from_y(star_model.r, n_input, lag)
+    
+    # Smooth Transition Autoregressive Model (STAR)
+    elif data_id == 5:
+        mu_params =     np.array( [0.05, 0.05])
+        sigma_params =  np.array( [0.20, 0.20])
+        AR_params =     np.array([[0.55, 0 ],
+                                  [-0.30, 0] ])   
+        gamma = 1
+        star_model = STAR(mu_params, sigma_params, AR_params, gamma)        
+        star_model.sim(n_obs+n_input)
+        star_model.plot(colored=True)
+        X, y = gen_X_from_y(star_model.r, n_input, lag)    
+    
+    
     
     # standardize   
     scaler = StandardScaler()   
@@ -86,11 +94,7 @@ def gen_data(data_id, n_obs, n_input, batch_size=16, lag=1):
     # split data into test and train set
     X, X_train, X_test, y, y_train, y_test = split_data(X, y, batch_size)
     
-    
-    # alternative: shuffle & split
-    # X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.4) 
-    # X_train, X_test, y_train, y_test = adjust_for_batch_size(X_train, X_test, y_train, y_test, batch_size)
-    
+
     return X, X_train, X_test, y, y_train, y_test
 
 ##############################################################################

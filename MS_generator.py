@@ -62,14 +62,11 @@ class MRS:
             self.markovchain = np.append(self.markovchain, state)
             # calc returns for given state
             e[t] = e[t] * self.sigma_params[state] * np.sqrt(dt)
-            mu = self.mu_params[state] * dt + e[t]
+            mu = self.mu_params[state] * dt #+ e[t]
             self.r[t] = mu + e[t] + self.AR_params[state,0]*self.r[t-1] + self.AR_params[state,1]*self.r[t-2]
         self.y = 10*np.exp(np.cumsum(self.r))
-    
-    
-    
-    
-    def plot_sim(self, colored=True):
+       
+    def plot(self, colored=True):
         "Plot generated data"
         plt.style.use('ggplot')
         r = self.r
@@ -117,4 +114,4 @@ if __name__ == "__main__":
     mrs_model = MRS(P, mu_params, sigma_params, AR_params)
     
     mrs_model.sim(N)
-    mrs_model.plot_sim(colored=True)
+    mrs_model.plot(colored=True)

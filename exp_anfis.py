@@ -27,11 +27,10 @@ n_epochs = 50
 ## Data Parameters
 n_obs = 2000  
 lag = 1                         
-data_id = 1                             # 0 = markov regime switching ts / 
-                                        # 1 = mackey / 2 = sinc/ 
-              
-                          # 3 = Three-Input Nonlin /4 = diabetes / 
-                                        # 5 = artificial regression
+data_id = 1                             # 0 = mackey / 1 = sinc / 
+                                        # 2 = Three-Input Nonlin /
+                                        # 3 = markov switching  
+                                        # 4 = TAR  /  # 5 = STAR
 
 ## General Parameters
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'

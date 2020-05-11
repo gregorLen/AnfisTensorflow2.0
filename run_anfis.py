@@ -17,28 +17,28 @@ import seaborn as sns
 ## Model Parameter
 param = myanfis.fis_parameters(
             n_input = 4,                # no. of Regressors
-            n_memb = 2,                 # no. of fuzzy memberships
+            n_memb = 3,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',      # 'gaussian' / 'gbellmf'
             optimizer = 'adam',          # sgd / adam / ...
-            loss = 'mean_absolute_percentage_error',   # mse / mae / huber_loss / mean_absolute_percentage_error / ...
+            loss = 'huber_loss',               # mse / mae / huber_loss / mean_absolute_percentage_error / ...
             n_epochs = 100               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
 n_obs = 1000                            # might be adjusted for batch size!
-lag = 6
-data_id = 1                             # 0 = markov regime switching ts / 
-                                        # 1 = mackey / 2 = sinc/ 
-                                        # 3 = Three-Input Nonlin /4 = diabetes / 
-                                        # 5 = artificial regression
+lag = 1
+data_id = 5                             # 0 = mackey / 1 = sinc / 
+                                        # 2 = Three-Input Nonlin /
+                                        # 3 = markov switching  
+                                        # 4 = TAR  /  # 5 = STAR 
 ## General Parameters
 plt.style.use('seaborn')                # default / ggplot / seaborn
 plot_prediction = True                  # True / False
 plot_learningcurves = True              # True / False
 plot_mfs = True                         # True / False
 show_initial_weights = True             # True / False
-plot_heatmap = True                     # True / False
+plot_heatmap = False                    # True / False
 show_summary = True                     # True / False
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
