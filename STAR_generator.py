@@ -140,6 +140,7 @@ if __name__ == "__main__":
                               [-0.30, 0] ])   
     
     gamma = 1.5
+    #gamma = float('inf')
     
     star_model = STAR(mu_params, sigma_params, AR_params, gamma)
     

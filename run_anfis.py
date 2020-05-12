@@ -16,8 +16,8 @@ import seaborn as sns
 ##############################################################################
 ## Model Parameter
 param = myanfis.fis_parameters(
-            n_input = 4,                # no. of Regressors
-            n_memb = 3,                 # no. of fuzzy memberships
+            n_input = 2,                # no. of Regressors
+            n_memb = 2,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',      # 'gaussian' / 'gbellmf'
             optimizer = 'adam',          # sgd / adam / ...
@@ -28,7 +28,7 @@ param = myanfis.fis_parameters(
 ## Data Parameters
 n_obs = 1000                            # might be adjusted for batch size!
 lag = 1
-data_id = 5                             # 0 = mackey / 1 = sinc / 
+data_id = 0                             # 0 = mackey / 1 = sinc / 
                                         # 2 = Three-Input Nonlin /
                                         # 3 = markov switching  
                                         # 4 = TAR  /  # 5 = STAR 

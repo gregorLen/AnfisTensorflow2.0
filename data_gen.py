@@ -38,7 +38,7 @@ def split_data(X, y, batch_size):
 def gen_data(data_id, n_obs, n_input, batch_size=16, lag=1):
             
     # Mackey    
-    elif data_id == 0: 
+    if data_id == 0: 
         y = mackey(124+n_obs+n_input)[124:]
         X, y = gen_X_from_y(y, n_input, lag)
    
