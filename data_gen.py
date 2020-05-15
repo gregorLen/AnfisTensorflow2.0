@@ -75,8 +75,8 @@ def gen_data(data_id, n_obs, n_input, batch_size=16, lag=1):
     
     # Smooth Transition Autoregressive Model (STAR)
     elif data_id == 5:
-        mu_params =     np.array( [0.05, 0.05])
-        sigma_params =  np.array( [0.20, 0.20])
+        mu_params =     np.array( [0.15, -0.10])
+        sigma_params =  np.array( [0.0, 0.0])
         AR_params =     np.array([[0.55, 0 ],
                                   [-0.30, 0] ])   
         gamma = 1
@@ -90,6 +90,9 @@ def gen_data(data_id, n_obs, n_input, batch_size=16, lag=1):
     # standardize   
     scaler = StandardScaler()   
     X = scaler.fit_transform(X)
+    
+    scaler = StandardScaler()   
+    y = scaler.fit_transform(y)
           
     # split data into test and train set
     X, X_train, X_test, y, y_train, y_test = split_data(X, y, batch_size)

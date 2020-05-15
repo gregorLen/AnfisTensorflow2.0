@@ -50,6 +50,7 @@ class STAR:
         return output
     
     def sim_transitionvar(self, N=750, threshold=0):
+        #np.random.seed(1)
         e = np.random.randn(N)
         transvar = self.cumsum_with_limits(e, lower_limit=-4, upper_limit=4)
         regime = self.G(transvar, c=self.c, gamma=self.gamma)    
@@ -134,13 +135,13 @@ if __name__ == "__main__":
     N = 250
     mu_params =     np.array( [0.05, -0.15])
                             
-    sigma_params =  np.array( [0.02, 0.2])
+    sigma_params =  np.array( [0.0, 0.0])
                             
-    AR_params =     np.array([[0.6, 0 ],
-                              [-0.30, 0] ])   
+    AR_params =     np.array([[0.0, 0 ],
+                              [0.0, 0] ])   
     
-    gamma = 1.5
-    #gamma = float('inf')
+    #gamma = 1.5
+    gamma = float('inf')
     
     star_model = STAR(mu_params, sigma_params, AR_params, gamma)
     

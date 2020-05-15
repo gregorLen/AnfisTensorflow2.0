@@ -1,10 +1,10 @@
 """
 BASE SIMULATION MYANFIS (SANDBOX)
 """
-import myanfis
+import conanfis
 import numpy as np
 import time
-import data_gen as gen
+import data_gen_conanfis as gen
 import tensorflow as tf
 import datetime
 import os
@@ -15,23 +15,22 @@ import seaborn as sns
 # import tensorflow.keras.optimizers as optimizers    # <-- for specifying optimizer
 ##############################################################################
 ## Model Parameter
-param = myanfis.fis_parameters(
-            n_input = 2,                # no. of Regressors
-            n_memb = 4,                 # no. of fuzzy memberships
+param = conanfis.fis_parameters(
+            n_input = 1,                # no. of Regressors
+            n_control = 1,              # no. of controlvariables
+            n_memb = 2,                 # no. of fuzzy memberships
             batch_size = 16,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',      # 'gaussian' / 'gbellmf'
             optimizer = 'sgd',          # sgd / adam / ...
             loss = 'mse',               # mse / mae / huber_loss / mean_absolute_percentage_error / ...
-            n_epochs = 100               # 10 / 25 / 50 / 100 / ...
+            n_epochs = 200               # 10 / 25 / 50 / 100 / ...
             )      
 
 ## Data Parameters
 n_obs = 1000                            # might be adjusted for batch size!
 lag = 1
-data_id = 5                             # 0 = mackey / 1 = sinc / 
-                                        # 2 = Three-Input Nonlin /
-                                        # 3 = markov switching  
-                                        # 4 = TAR  /  # 5 = STAR 
+data_id = 0                            # 0 = TAR  /  # 1 = STAR 
+
 ## General Parameters
 plt.style.use('seaborn')                # default / ggplot / seaborn
 plot_prediction = True                  # True / False
@@ -44,7 +43,7 @@ core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
 ##############################################################################    
 # Generate Data
-X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_id, n_obs, param.n_input, param.batch_size, lag)
+X, X_train, X_test, y, y_train, y_test = gen.gen_data(data_id, n_obs, param.n_input, param.n_control, param.batch_size, lag)
 
 # show which devices your operations are assigned to
 tf.debugging.set_log_device_placement(show_core_usage) 
@@ -59,13 +58,14 @@ with tf.device(core):  # CPU / GPU
     tensorboard_callback = TensorBoard(log_dir=log_path, histogram_freq=1)
     
     # create model
-    fis = myanfis.ANFIS(n_input = param.n_input, 
-                        n_memb = param.n_memb, 
-                        batch_size = param.batch_size, 
-                        memb_func = param.memb_func,
-                        name = 'myanfis'
-                        )
-    
+    fis = conanfis.CONANFIS(n_input = param.n_input, 
+                            n_control = param.n_control,
+                            n_memb = param.n_memb, 
+                            batch_size = param.batch_size, 
+                            memb_func = param.memb_func,
+                            name = 'myanfis'
+                            )
+        
     # compile model
     fis.model.compile(optimizer=param.optimizer, 
                       loss=param.loss 
