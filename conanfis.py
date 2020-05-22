@@ -206,7 +206,7 @@ class FuzzyLayer(keras.layers.Layer):
 
             self.c = self.add_weight(name = 'c',
                             shape=(self.m, self.n+self.n_control),
-                            initializer = equally_spaced_initializer, #'ones',
+                            initializer = 'zeros',#equally_spaced_initializer, #'ones',
                             trainable = True)
 
         super(FuzzyLayer, self).build(batch_input_shape)  # Be sure to call this at the end
@@ -260,9 +260,9 @@ class RuleLayer(keras.layers.Layer):
         super(RuleLayer, self).build(batch_input_shape)  # Be sure to call this at the end
 
     def call(self, input_):
-        CP = []
-        # a tensor object is not assignable*, so you cannot use it on the left-hand side of an assignment.
+        # a tensorflow tensor object is not assignable*, so you cannot use it on the left-hand side of an assignment.
         # build a Python list of tensors, and tf.stack() them together at the end of the loop:
+        CP = []
         for batch in range(self.batch_size):
             xd_shape = [self.m]
             c_shape = [1]
@@ -272,7 +272,7 @@ class RuleLayer(keras.layers.Layer):
                 # append shape indizes
                 c_shape.insert(0,self.m)
                 xd_shape.insert(0,1)
-                # get cartesian product for each dimension
+                # get cartesian product for each dimension via broadcasting
                 xd = tf.reshape(input_[batch,:,d], (xd_shape))
                 c = tf.reshape(cp,(c_shape))
                 cp = tf.matmul(c , xd)

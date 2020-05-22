@@ -392,9 +392,7 @@ if __name__ == "__main__":
     fis.model.summary()
 
     # get premise parameters
-    mus = fis.mus
-    sigmas = fis.sigmas
-    # premise_parameters = fis.model.get_layer('fuzzyLayer').get_weights()       # alternative
+    premise_parameters = fis.model.get_layer('fuzzyLayer').get_weights()       # alternative
 
     # get consequence paramters
     bias = fis.bias
