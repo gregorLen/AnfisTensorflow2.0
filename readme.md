@@ -28,8 +28,8 @@ You can choose from various parameters to set inputs, membershipfunctions, losse
 For [hyperparameter tuning](https://www.tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams) you can run `exp_anfis.py` which tunes `n_input`, `n_memb`, `memb_func`, `loss` and `optimizer` depending an arbitrary metric and data set. The experiment also includes a callback for [Tensorboard](https://www.tensorflow.org/tensorboard) (see 4. Using Tensorboard).
 ## 2. Dependencies
 
-- Python 3.5-3.7
-- tensorflow 2.0.0 (or higher)
+- Python 3.5-3.8
+- tensorflow 2.0 (or higher)
 - numpy (1.18.1)
 - matplotlib (3.1.3)
 - pandas (1.0.1)

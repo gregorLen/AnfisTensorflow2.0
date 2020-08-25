@@ -28,7 +28,7 @@ param = myanfis.fis_parameters(
 ## Data Parameters
 n_obs = 1600                            # might be adjusted for batch size!
 lag = 1
-data_id = 1                             # 0 = mackey / 1 = sinc / 
+data_id = 0                             # 0 = mackey / 1 = sinc / 
                                         # 2 = Three-Input Nonlin /
                                         # 3 = markov switching  
                                         # 4 = TAR  /  # 5 = STAR 
