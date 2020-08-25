@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['axes.xmargin'] = 0 # remove margins from all plots
 ##############################################################################
 def get_data_name(data_id):
-    data_sets = ['markovRS', 'mackey', 'sinc', 'threeInputNonlin', 'diabetes', 'regressoin']
+    data_sets = ['mackey', 'sinc', 'threeInputNonlin', 'MarkovRS', 'TAR', 'STAR']
     
     return data_sets[data_id]
 
