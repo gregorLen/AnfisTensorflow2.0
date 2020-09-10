@@ -1,7 +1,7 @@
 """
 Experiment for Anfis Sandbox
 """
-import myanfis
+from Models import myanfis
 import numpy as np
 import time
 import data_gen as gen

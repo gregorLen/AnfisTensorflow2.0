@@ -3,12 +3,11 @@
 Data Simulation for Anfis Sandbox
 """
 import numpy as np
-from sklearn.datasets import load_diabetes 
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_regression
-from MS_generator import MRS
-from STAR_generator import STAR
+from .markov_process import MRS
+from .star_process import STAR
 import matplotlib.pyplot as plt
 plt.rcParams['axes.xmargin'] = 0 # remove margins from all plots
 ##############################################################################
