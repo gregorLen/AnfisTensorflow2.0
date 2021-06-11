@@ -26,17 +26,24 @@ You can choose from various parameters to set inputs, membershipfunctions, losse
 
 #### Experimental Setup
 For [hyperparameter tuning](https://www.tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams) you can run `run_experiment.py` which tunes `n_input`, `n_memb`, `memb_func`, `loss` and `optimizer` depending an arbitrary metric and data set. The experiment also includes a callback for [Tensorboard](https://www.tensorflow.org/tensorboard) (see 4. Using Tensorboard).
-## 2. Dependencies
+## 2. Dependencies (OLD)
 
 - Python 3.5-3.8
-- tensorflow 2.0 (or higher)
+- tensorflow 2.3 
 - numpy (1.18.1)
 - matplotlib (3.1.3)
 - pandas (1.0.1)
 - sklearn (0.22.1)
 - seaborn (0.10.0)
 
-To install requirements,  `cd` to the directory of the repository and run `pip install -r requirements.txt`. A virtual environment is recommended. 
+### How to setup the environment via conda:
+1. `cd` into the repository
+2. run `conda env create -f environment.yml` to install all requirements.
+3. activate environment via `conda activate tensoflowanfis-env`
+
+For future updates cd into repo and run `conda env update --file environment.yml --prune`.
+The `--prune` option causes conda to remove any dependencies that are no longer required from the environment.
+
 
 ## 3. Quickstart
 A quick start to a default ANFIS model is shown below. `myanfis.ANFIS()` is a [customized](https://www.tensorflow.org/guide/keras/custom_layers_and_models) tensorflow model. As a consequence you can use all model functions that are part of tensorflow, i.e. `model.compile()` to compile the model.

@@ -1,6 +1,7 @@
 """
 BASE SIMULATION MYANFIS (SANDBOX)
 """
+#%%
 from Models import myanfis
 import numpy as np
 import time
@@ -18,7 +19,7 @@ import seaborn as sns
 param = myanfis.fis_parameters(
             n_input = 2,                # no. of Regressors
             n_memb = 3,                 # no. of fuzzy memberships
-            batch_size = 16,            # 16 / 32 / 64 / ...
+            batch_size = 32,            # 16 / 32 / 64 / ...
             memb_func = 'gaussian',      # 'gaussian' / 'gbellmf'
             optimizer = 'adam',          # sgd / adam / ...
             loss = 'mse',               # mse / mae / huber_loss / mean_absolute_percentage_error / ...
@@ -87,7 +88,7 @@ with tf.device(core):  # CPU / GPU
 # ## Evaluate Model
 # fis.model.evaluate(X_test, y_test)  
 if plot_prediction:
-    y_pred = fis.model.predict(X)
+    y_pred = fis(X)
     f, axs = plt.subplots(2,1,figsize=(8,10))
     f.suptitle(f'{gen.get_data_name(data_id)} time series', size=16)
     axs[0].plot(y)
@@ -119,5 +120,4 @@ if plot_heatmap:
         
 if show_summary:
     print(fis.model.summary())
-
 

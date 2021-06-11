@@ -6,3 +6,8 @@ env
 .coverage
 logs/run_anfis
 .spyproject
+
+
+# personal vscode settings
+.vscode
+settings.json
