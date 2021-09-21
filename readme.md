@@ -155,3 +155,7 @@ history = fis.fit(...
 ---
 ## 7. Contact
 I am very thankful for any kind of feedback. Also, if you have questions, please contact gregor.lenhard@unibas.ch
+
+
+## 8. References
+Lenhard, G. (2020). Adaptive-Network-Based Fuzzy Inference System (ANFIS) based on Keras on top of Tensorflow 2.0.
