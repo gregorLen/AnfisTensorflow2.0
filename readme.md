@@ -26,7 +26,7 @@ You can choose from various parameters to set inputs, membershipfunctions, losse
 
 #### Experimental Setup
 For [hyperparameter tuning](https://www.tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams) you can run `run_experiment.py` which tunes `n_input`, `n_memb`, `memb_func`, `loss` and `optimizer` depending an arbitrary metric and data set. The experiment also includes a callback for [Tensorboard](https://www.tensorflow.org/tensorboard) (see 4. Using Tensorboard).
-## 2. Dependencies (OLD)
+## 2. Dependencies
 
 - Python 3.6-3.9
 - tensorflow 2.6.0 
