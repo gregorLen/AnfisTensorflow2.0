@@ -44,7 +44,10 @@ plot_heatmap = False                    # True / False
 show_summary = True                     # True / False
 core = '/device:CPU:0'                  # '/device:CPU:0' // '/device:GPU:0'
 show_core_usage = False                 # True / False
+seed = 1                                # set seed for reproducibility
 ##############################################################################
+tf.random.set_seed(seed)
+np.random.seed(seed)
 # Generate Data
 X, X_train, X_test, y, y_train, y_test = gen.gen_data(
     data_id, n_obs, param.n_input, param.batch_size, lag)
