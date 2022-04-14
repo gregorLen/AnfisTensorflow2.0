@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 
 class fis_parameters():
-    def __init__(self, n_input=3, n_memb=3, batch_size=16, n_epochs=25, memb_func='gaussian', optimizer='sgd', loss='mse'):
+    def __init__(self, n_input: int = 3, n_memb: int = 3, batch_size: int = 16, n_epochs: int = 25, memb_func: str = 'gaussian', optimizer: str = 'sgd', loss: str = 'mse'):
         self.n_input = n_input  # no. of Regressors
         self.n_memb = n_memb  # no. of fuzzy memberships
         self.batch_size = batch_size
@@ -27,13 +27,13 @@ class fis_parameters():
 
 # Main Class ANFIS
 class ANFIS:
-    def __init__(self, n_input, n_memb, batch_size=16, memb_func='gaussian', name='MyAnfis'):
+    def __init__(self, n_input: int, n_memb: int, batch_size: int = 16, memb_func: str = 'gaussian', name: str = 'MyAnfis'):
         self.n = n_input
         self.m = n_memb
         self.batch_size = batch_size
         self.memb_func = memb_func
         input_ = keras.layers.Input(
-            shape=(n_input), name='inputLayer', batch_size=batch_size)
+            shape=(n_input), name='inputLayer', batch_size=self.batch_size)
         L1 = FuzzyLayer(n_input, n_memb, memb_func, name='fuzzyLayer')(input_)
         L2 = RuleLayer(n_input, n_memb, name='ruleLayer')(L1)
         L3 = NormLayer(name='normLayer')(L2)
@@ -43,7 +43,7 @@ class ANFIS:
         self.update_weights()
 
     def __call__(self, X):
-        return self.model.predict(X)
+        return self.model.predict(X, batch_size=self.batch_size)
 
     def update_weights(self):
         # premise parameters (mu&sigma for gaussian // a/b/c for bell-shaped)
@@ -151,10 +151,10 @@ class ANFIS:
 
     def get_memberships(self, Xs):
         intermediate_layer_model = keras.Model(inputs=self.model.input,
-                                               outputs=self.model.get_layer('normLayer').output)
-        intermediate_output = intermediate_layer_model.predict(Xs)
+                                               L2_outputs=self.model.get_layer('normLayer').L2_output)
+        intermediate_L2_output = intermediate_layer_model.predict(Xs)
 
-        return intermediate_output
+        return intermediate_L2_output
 
 
 # Custom weight initializer
@@ -229,33 +229,33 @@ class FuzzyLayer(keras.layers.Layer):
 
     def call(self, x_inputs):
         if self.memb_func == 'gbellmf':
-            Layer1 = 1 / (1 +
-                          tf.math.pow(
-                              tf.square(tf.subtract(
-                                  tf.reshape(
-                                      tf.tile(x_inputs, (1, self.m)), (-1, self.m, self.n)), self.c
-                              ) / self.a), self.b)
-                          )
+            L1_output = 1 / (1 +
+                             tf.math.pow(
+                                 tf.square(tf.subtract(
+                                     tf.reshape(
+                                         tf.tile(x_inputs, (1, self.m)), (-1, self.m, self.n)), self.c
+                                 ) / self.a), self.b)
+                             )
         elif self.memb_func == 'gaussian':
-            Layer1 = tf.exp(-1 *
-                            tf.square(tf.subtract(
-                                tf.reshape(
-                                    tf.tile(x_inputs, (1, self.m)), (-1, self.m, self.n)), self.mu
-                            )) / tf.square(self.sigma))
+            L1_output = tf.exp(-1 *
+                               tf.square(tf.subtract(
+                                   tf.reshape(
+                                       tf.tile(x_inputs, (1, self.m)), (-1, self.m, self.n)), self.mu
+                               )) / tf.square(self.sigma))
 
         elif self.memb_func == 'sigmoid':
-            Layer1 = tf.math.divide(1,
-                                    tf.math.exp(-self.gamma *
-                                                tf.subtract(
-                                                    tf.reshape(
-                                                        tf.tile(x_inputs, (1, self.m)), (-1, self.m, self.n)), self.c)
-                                                )
-                                    )
-        return Layer1  # = fuzzy cluster
+            L1_output = tf.math.divide(1,
+                                       tf.math.exp(-self.gamma *
+                                                   tf.subtract(
+                                                       tf.reshape(
+                                                           tf.tile(x_inputs, (1, self.m)), (-1, self.m, self.n)), self.c)
+                                                   )
+                                       )
+        return L1_output  # = fuzzy cluster
 
-    def compute_output_shape(self, batch_input_shape):
-        # return ((self.batch_size, self.m, self.n))
-        return tf.TensorShape([self.batch_size, self.m, self.n])
+    # def compute_L2_output_shape(self, batch_input_shape):
+        # # return ((self.batch_size, self.m, self.n))
+        # return tf.TensorShape([self.batch_size, self.m, self.n])
 
 # Layer 2
 
@@ -277,56 +277,53 @@ class RuleLayer(keras.layers.Layer):
         CP = []
         # a tensor object is not assignable*, so you cannot use it on the left-hand side of an assignment.
         # build a Python list of tensors, and tf.stack() them together at the end of the loop:
-        for batch in range(self.batch_size):
+        for obs in range(input_.shape[0]):
             xd_shape = [self.m]
             c_shape = [1]
-            cp = input_[batch, :, 0]
+            cp = input_[obs, :, 0]
 
             for d in range(1, self.n):
                 # append shape indizes
                 c_shape.insert(0, self.m)
                 xd_shape.insert(0, 1)
                 # get cartesian product for each dimension
-                xd = tf.reshape(input_[batch, :, d], (xd_shape))
+                xd = tf.reshape(input_[obs, :, d], (xd_shape))
                 c = tf.reshape(cp, (c_shape))
                 cp = tf.matmul(c, xd)
 
-            flat_cp = tf.reshape(cp, (1, self.m**self.n))
-            CP.append(flat_cp)
+                flat_cp = tf.reshape(cp, (1, self.m**self.n))
+                CP.append(flat_cp)
 
         return tf.reshape(tf.stack(CP), (self.batch_size, self.m**self.n))
 
-    def compute_output_shape(self, batch_input_shape):
-        if self.n == 1:
-            return tf.TensorShape([self.batch_size, self.m])
-        else:
-            return tf.TensorShape([self.batch_size, self.m ** self.n])
+    # def compute_L2_output_shape(self, batch_input_shape):
+        # if self.n == 1:
+        # return tf.TensorShape([self.batch_size, self.m])
+        # else:
+        # return tf.TensorShape([self.batch_size, self.m ** self.n])
+
 
 # Layer 3
-
-
 class NormLayer(keras.layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def call(self, fire):
-        w_sum = tf.reshape(tf.reduce_sum(fire, axis=1), (-1, 1))
-        w_norm = fire / w_sum
+    def call(self, w):
+        w_sum = tf.reshape(tf.reduce_sum(w, axis=1), (-1, 1))
+        w_norm = w / w_sum
         return w_norm
 
-    def compute_output_shape(self, batch_input_shape):
-        return batch_input_shape
+    # def compute_L2_output_shape(self, batch_input_shape):
+        # return batch_input_shape
+
 
 # Layer 4
-
-
 class DefuzzLayer(keras.layers.Layer):
     def __init__(self, n_input, n_memb, **kwargs):
         super().__init__(**kwargs)
         self.n = n_input
         self.m = n_memb
 
-    def build(self, batch_input_shape):
         self.CP_bias = self.add_weight(name='Consequence_bias',
                                        shape=(1, self.m ** self.n),
                                        initializer=keras.initializers.RandomUniform(
@@ -340,18 +337,17 @@ class DefuzzLayer(keras.layers.Layer):
                                          # initializer = 'ones',
                                          trainable=True)
 
-    def call(self, w_norm, Xs):
+    def call(self, w_norm, input_):
 
-        Layer4 = tf.multiply(w_norm,
-                             tf.matmul(Xs, self.CP_weight) + self.CP_bias)
-        return Layer4  # Defuzzyfied Layer
+        L4_L2_output = tf.multiply(w_norm,
+                                   tf.matmul(input_, self.CP_weight) + self.CP_bias)
+        return L4_L2_output  # Defuzzyfied Layer
 
-    def compute_output_shape(self, batch_input_shape):
-        return batch_input_shape
+    # def compute_L2_output_shape(self, batch_input_shape):
+        # return batch_input_shape
+
 
 # Layer 5
-
-
 class SummationLayer(keras.layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -362,13 +358,13 @@ class SummationLayer(keras.layers.Layer):
         # Be sure to call this at the end
         super(SummationLayer, self).build(batch_input_shape)
 
-    def call(self, Layer4):
-        output = tf.reduce_sum(Layer4, axis=1)
-        output = tf.reshape(output, (self.batch_size, 1))
-        return output  # final output
+    def call(self, input_):
+        L5_L2_output = tf.reduce_sum(input_, axis=1)
+        L5_L2_output = tf.reshape(L5_L2_output, (-1, 1))
+        return L5_L2_output
 
-    def compute_output_shape(self, batch_input_shape):
-        return tf.TensorShape([self.batch_size, 1])
+    # def compute_L2_output_shape(self, batch_input_shape):
+        # return tf.TensorShape([self.batch_size, 1])
 
 
 #########################################################################################
