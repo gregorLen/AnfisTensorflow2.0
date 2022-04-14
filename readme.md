@@ -28,13 +28,13 @@ You can choose from various parameters to set inputs, membershipfunctions, losse
 For [hyperparameter tuning](https://www.tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams) you can run `run_experiment.py` which tunes `n_input`, `n_memb`, `memb_func`, `loss` and `optimizer` depending an arbitrary metric and data set. The experiment also includes a callback for [Tensorboard](https://www.tensorflow.org/tensorboard) (see 4. Using Tensorboard).
 ## 2. Dependencies (OLD)
 
-- Python 3.5-3.8
-- tensorflow 2.3 
-- numpy (1.18.1)
-- matplotlib (3.1.3)
-- pandas (1.0.1)
-- sklearn (0.22.1)
-- seaborn (0.10.0)
+- Python 3.6-3.9
+- tensorflow 2.6.0 
+- numpy
+- pandas
+- sklearn
+- matplotlib
+- seaborn
 
 ### How to setup the environment via conda:
 1. `cd` into the repository
