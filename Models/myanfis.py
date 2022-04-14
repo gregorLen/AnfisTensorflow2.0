@@ -151,7 +151,8 @@ class ANFIS:
 
     def get_memberships(self, Xs):
         intermediate_layer_model = keras.Model(inputs=self.model.input,
-                                               L2_outputs=self.model.get_layer('normLayer').L2_output)
+                                               outputs=self.model.get_layer('normLayer').output)
+
         intermediate_L2_output = intermediate_layer_model.predict(Xs)
 
         return intermediate_L2_output
@@ -251,15 +252,10 @@ class FuzzyLayer(keras.layers.Layer):
                                                            tf.tile(x_inputs, (1, self.m)), (-1, self.m, self.n)), self.c)
                                                    )
                                        )
-        return L1_output  # = fuzzy cluster
+        return L1_output
 
-    # def compute_L2_output_shape(self, batch_input_shape):
-        # # return ((self.batch_size, self.m, self.n))
-        # return tf.TensorShape([self.batch_size, self.m, self.n])
 
 # Layer 2
-
-
 class RuleLayer(keras.layers.Layer):
     def __init__(self, n_input, n_memb, **kwargs):
         super(RuleLayer, self).__init__(**kwargs)
@@ -274,33 +270,37 @@ class RuleLayer(keras.layers.Layer):
         super(RuleLayer, self).build(batch_input_shape)
 
     def call(self, input_):
-        CP = []
-        # a tensor object is not assignable*, so you cannot use it on the left-hand side of an assignment.
-        # build a Python list of tensors, and tf.stack() them together at the end of the loop:
-        for obs in range(input_.shape[0]):
-            xd_shape = [self.m]
-            c_shape = [1]
-            cp = input_[obs, :, 0]
+        if self.n == 2:
+            L2_output = tf.reshape(input_[:, :, 0], [self.batch_size, -1, 1]) * \
+                tf.reshape(input_[:, :, 1], [self.batch_size, 1, -1])
+        elif self.n == 3:
+            L2_output = tf.reshape(input_[:, :, 0], [self.batch_size, -1, 1, 1]) * \
+                tf.reshape(input_[:, :, 1], [self.batch_size, 1, -1, 1]) * \
+                tf.reshape(input_[:, :, 2], [self.batch_size, 1, 1, -1])
+        elif self.n == 4:
+            L2_output = tf.reshape(input_[:, :, 0], [self.batch_size, -1, 1, 1, 1]) * \
+                tf.reshape(input_[:, :, 1], [self.batch_size, 1, -1, 1, 1]) * \
+                tf.reshape(input_[:, :, 2], [self.batch_size, 1, 1, -1, 1]) * \
+                tf.reshape(input_[:, :, 3], [self.batch_size, 1, 1, 1, -1])
+        elif self.n == 5:
+            L2_output = tf.reshape(input_[:, :, 0], [self.batch_size, -1, 1, 1, 1, 1]) * \
+                tf.reshape(input_[:, :, 1], [self.batch_size, 1, -1, 1, 1, 1]) * \
+                tf.reshape(input_[:, :, 2], [self.batch_size, 1, 1, -1, 1, 1]) * \
+                tf.reshape(input_[:, :, 3], [self.batch_size, 1, 1, 1, -1, 1]) * \
+                tf.reshape(input_[:, :, 4], [self.batch_size, 1, 1, 1, 1, -1])
+        elif self.n == 6:
+            L2_output = tf.reshape(input_[:, :, 0], [self.batch_size, -1, 1, 1, 1, 1, 1]) * \
+                tf.reshape(input_[:, :, 1], [self.batch_size, 1, -1, 1, 1, 1, 1]) * \
+                tf.reshape(input_[:, :, 2], [self.batch_size, 1, 1, -1, 1, 1, 1]) * \
+                tf.reshape(input_[:, :, 3], [self.batch_size, 1, 1, 1, -1, 1, 1]) * \
+                tf.reshape(input_[:, :, 4], [self.batch_size, 1, 1, 1, 1, -1, 1]) * \
+                tf.reshape(input_[:, :, 5], [
+                           self.batch_size, 1, 1, 1, 1, 1, -1])
+        else:
+            raise ValueError(
+                f'This ANFIS implementation works with 2 to 6 inputs.')
 
-            for d in range(1, self.n):
-                # append shape indizes
-                c_shape.insert(0, self.m)
-                xd_shape.insert(0, 1)
-                # get cartesian product for each dimension
-                xd = tf.reshape(input_[obs, :, d], (xd_shape))
-                c = tf.reshape(cp, (c_shape))
-                cp = tf.matmul(c, xd)
-
-                flat_cp = tf.reshape(cp, (1, self.m**self.n))
-                CP.append(flat_cp)
-
-        return tf.reshape(tf.stack(CP), (self.batch_size, self.m**self.n))
-
-    # def compute_L2_output_shape(self, batch_input_shape):
-        # if self.n == 1:
-        # return tf.TensorShape([self.batch_size, self.m])
-        # else:
-        # return tf.TensorShape([self.batch_size, self.m ** self.n])
+        return tf.reshape(L2_output, [self.batch_size, -1])
 
 
 # Layer 3
@@ -312,9 +312,6 @@ class NormLayer(keras.layers.Layer):
         w_sum = tf.reshape(tf.reduce_sum(w, axis=1), (-1, 1))
         w_norm = w / w_sum
         return w_norm
-
-    # def compute_L2_output_shape(self, batch_input_shape):
-        # return batch_input_shape
 
 
 # Layer 4
@@ -342,9 +339,6 @@ class DefuzzLayer(keras.layers.Layer):
         L4_L2_output = tf.multiply(w_norm,
                                    tf.matmul(input_, self.CP_weight) + self.CP_bias)
         return L4_L2_output  # Defuzzyfied Layer
-
-    # def compute_L2_output_shape(self, batch_input_shape):
-        # return batch_input_shape
 
 
 # Layer 5
