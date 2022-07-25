@@ -1,6 +1,8 @@
 # [WORK IN PROGRESS] ANFIS Tensoflow 2.0
 A simple implementation of [Adaptive-Network-Based Fuzzy Inference System (ANFIS)](https://www.researchgate.net/publication/3113825_ANFIS_Adaptive-Network-based_Fuzzy_Inference_System) based on [Tensorflow 2.0](https://www.tensorflow.org/guide) and [Keras](https://keras.io/). 
 
+If you are looking for a PyTorch implementation, check out my python package [S-ANFIS-PyTorch](https://github.com/gregorLen/S-ANFIS-PyTorch).
+
 ## 1. Features
 #### Model
 Currently the implementation will support two types of membership functions (```memb_func```):
@@ -149,6 +151,7 @@ history = fis.fit(...
 ## 5. TO DO
 - other fuzzy reasoning mechanism
 ## 6. Related Work
+- [S-ANFIS-PyTorch](https://github.com/gregorLen/S-ANFIS-PyTorch) by me
 - [bare-bones implementation of ANFIS](https://github.com/twmeggs/anfis) (manual derivatives) by [twmeggs](https://github.com/twmeggs) 
 - [PyTorch implementation](https://github.com/jfpower/anfis-pytorch) by [James Power](http://www.cs.nuim.ie/~jpower/)
 - [simple ANFIS based on Tensorflow 1.15.2](https://github.com/tiagoCuervo/TensorANFIS) by [Santiago Cuervo](https://github.com/tiagoCuervo)
